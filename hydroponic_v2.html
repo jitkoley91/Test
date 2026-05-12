@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HydroSync Pro — IoT Farm Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Exo+2:ital,wght@0,200;0,400;0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════
+   DESIGN SYSTEM — SCIENTIFIC BIOPUNK
+   Palette: Deep Midnight · Amber · Cyan · Violet
+   Typography: Orbitron (display) · Rajdhani (body) · Share Tech Mono (data)
+═══════════════════════════════════════════ */
+:root {
+  /* Core palette */
+  --ink:    #020c0e;
+  --ink2:   #041418;
+  --panel:  #061c22;
+  --panel2: #082530;
+  --surface:#0b2e38;
+  --rim:    #0e3d4a;
+  --rim2:   #164d5c;
+
+  /* Primary accent — Amber/Gold */
+  --a1: #ffb300;
+  --a2: #ffd54f;
+  --a3: #ffe082;
+  --a-dim:#3d2900;
+
+  /* Secondary — Cyan/Teal */
+  --c1: #00e5ff;
+  --c2: #80deea;
+  --c3: #b2ebf2;
+  --c-dim:#002a33;
+
+  /* Tertiary — Violet */
+  --v1: #ea80fc;
+  --v2: #ce93d8;
+  --v3: #f3e5f5;
+  --v-dim:#2d0040;
+
+  /* Bio-Green */
+  --g1: #76ff03;
+  --g2: #b2ff59;
+  --g-dim:#1a3300;
+
+  /* Status */
+  --ok:  #69ff47;
+  --warn:#ffab40;
+  --bad: #ff1744;
+
+  /* Text */
+  --tx1: #e0f7fa;
+  --tx2: #b2dfdb;
+  --tx3: #80cbc4;
+  --tx4: #4db6ac;
+  --tx5: #2e7d7d;
+
+  /* Sizing */
+  --r4: 4px; --r8: 8px; --r12: 12px; --r16: 16px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+
+body {
+  background: var(--ink);
+  color: var(--tx1);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ── ANIMATED BACKGROUND ── */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 60% at -10% 50%, #001e2888 0%, transparent 55%),
+    radial-gradient(ellipse 60% 80% at 110% 30%, #00102066 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, #1a0e0044 0%, transparent 60%),
+    repeating-linear-gradient(0deg, transparent, transparent 60px, #00e5ff04 60px, #00e5ff04 61px),
+    repeating-linear-gradient(90deg,transparent, transparent 60px, #00e5ff03 60px, #00e5ff03 61px);
+}
+body::after {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background: radial-gradient(ellipse 30% 30% at 70% 70%, #ffb30010 0%, transparent 60%);
+  animation: bg-pulse 8s ease-in-out infinite alternate;
+}
+@keyframes bg-pulse { 0%{opacity:.3} 100%{opacity:1} }
+
+/* ── SHELL ── */
+.shell { position:relative; z-index:1; display:flex; flex-direction:column; height:100vh; }
+
+/* ══════════════════════════════════════
+   TOP BAR
+══════════════════════════════════════ */
+.topbar {
+  display:flex; align-items:stretch; height:62px;
+  background: linear-gradient(90deg, #020c0e 0%, #061c22 40%, #041418 100%);
+  border-bottom: 1px solid var(--rim);
+  position:relative; flex-shrink:0;
+}
+.topbar::after {
+  content:'';
+  position:absolute; bottom:-2px; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--c1), var(--a1), var(--v1), transparent);
+  opacity:.6;
+}
+
+.brand {
+  display:flex; align-items:center; gap:14px;
+  padding:0 24px; border-right:1px solid var(--rim);
+  min-width:260px; background: #02090c;
+}
+.brand-logo {
+  width:40px; height:40px; border-radius:8px;
+  background: linear-gradient(135deg, var(--c-dim), var(--panel));
+  border:1px solid var(--c1); display:flex; align-items:center;
+  justify-content:center; font-size:20px; flex-shrink:0;
+  box-shadow: 0 0 16px #00e5ff33;
+}
+.brand-text {}
+.brand-name {
+  font-family:'Orbitron',monospace; font-size:15px; font-weight:700;
+  background: linear-gradient(90deg, var(--c1), var(--a2));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  letter-spacing:2px; line-height:1;
+}
+.brand-sub {
+  font-family:'Share Tech Mono',monospace; font-size:9px;
+  color:var(--tx5); letter-spacing:3px; margin-top:2px;
+}
+
+.nav-tabs { display:flex; flex:1; }
+.nav-tab {
+  display:flex; align-items:center; gap:10px;
+  padding:0 28px; border:none; background:none;
+  font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:600;
+  color:var(--tx5); cursor:pointer; letter-spacing:1px;
+  border-bottom:3px solid transparent;
+  transition:all .25s; position:relative; white-space:nowrap;
+}
+.nav-tab::before {
+  content:''; position:absolute; bottom:0; left:50%; right:50%;
+  height:3px; background:linear-gradient(90deg,var(--c1),var(--a1));
+  transition:all .3s; border-radius:2px 2px 0 0;
+}
+.nav-tab.active::before { left:0; right:0; }
+.nav-tab:hover { color:var(--tx2); }
+.nav-tab.active { color:var(--tx1); }
+.nav-tab .ti { font-size:16px; }
+
+.topbar-right {
+  display:flex; align-items:center; gap:20px;
+  padding:0 24px; border-left:1px solid var(--rim);
+  background:#02090c;
+}
+.live-indicator {
+  display:flex; align-items:center; gap:8px;
+  font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--ok);
+}
+.live-dot {
+  width:8px; height:8px; border-radius:50%; background:var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+  animation:pulse-dot 1.6s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+.sys-clock {
+  font-family:'Orbitron',monospace; font-size:14px; font-weight:600;
+  color:var(--a1); letter-spacing:2px;
+}
+.conn-badge {
+  padding:4px 10px; border-radius:4px;
+  background:var(--c-dim); border:1px solid var(--c1);
+  font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--c1);
+  letter-spacing:1px;
+}
+
+/* ══════════════════════════════════════
+   CONTENT AREA
+══════════════════════════════════════ */
+.content { flex:1; overflow-y:auto; overflow-x:hidden; }
+.tab-pane { display:none; }
+.tab-pane.active { display:block; }
+
+.content::-webkit-scrollbar { width:5px; }
+.content::-webkit-scrollbar-track { background:var(--ink); }
+.content::-webkit-scrollbar-thumb { background:var(--rim2); border-radius:3px; }
+
+/* ── SECTION HEADER ── */
+.sec-hdr {
+  display:flex; align-items:center; gap:14px; margin-bottom:24px;
+}
+.sec-icon {
+  width:38px; height:38px; border-radius:8px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; border:1px solid var(--rim2);
+  background:var(--panel2);
+}
+.sec-label {
+  font-family:'Orbitron',monospace; font-size:12px; font-weight:600;
+  color:var(--c1); letter-spacing:4px; text-transform:uppercase;
+}
+.sec-line { flex:1; height:1px; background:linear-gradient(90deg,var(--rim2),transparent); }
+
+/* ══════════════════════════════════════
+   SHARED CARD STYLES
+══════════════════════════════════════ */
+.card {
+  background:var(--panel); border:1px solid var(--rim);
+  border-radius:var(--r12); position:relative; overflow:hidden;
+}
+.card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,var(--rim2),transparent);
+}
+.card-body { padding:20px; }
+.card-title {
+  font-family:'Orbitron',monospace; font-size:11px; font-weight:600;
+  color:var(--tx4); letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;
+}
+.card-sub { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5); }
+
+/* ══════════════════════════════════════
+   TAB 1 — SYSTEM FLOW
+══════════════════════════════════════ */
+.flow-page { max-width:1300px; margin:0 auto; padding:32px 24px 80px; }
+
+/* hero */
+.flow-hero { text-align:center; padding:40px 20px 48px; position:relative; }
+.flow-hero::before {
+  content:'HYDROPONICS INTELLIGENCE SYSTEM';
+  position:absolute; top:20px; left:50%; transform:translateX(-50%);
+  font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5);
+  letter-spacing:6px; white-space:nowrap;
+}
+.flow-pill {
+  display:inline-flex; align-items:center; gap:8px;
+  background:var(--panel2); border:1px solid var(--c1);
+  color:var(--c1); font-family:'Share Tech Mono',monospace; font-size:11px;
+  letter-spacing:2px; padding:6px 18px; border-radius:30px; margin-bottom:24px;
+  box-shadow:0 0 24px #00e5ff22;
+}
+.flow-h1 {
+  font-family:'Orbitron',monospace; font-weight:900;
+  font-size:clamp(32px,5.5vw,64px); line-height:1.05;
+  background:linear-gradient(135deg, var(--c1) 0%, var(--a2) 50%, var(--v1) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:16px; letter-spacing:2px;
+}
+.flow-sub {
+  font-family:'Rajdhani',sans-serif; font-size:19px; font-weight:400;
+  color:var(--tx3); letter-spacing:2px;
+}
+
+/* glance */
+.glance-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+  gap:12px; margin-bottom:48px;
+}
+.glance-card {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r8); padding:16px 12px; text-align:center;
+  transition:all .3s; cursor:default; position:relative; overflow:hidden;
+}
+.glance-card::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg,var(--c1)08,transparent);
+  opacity:0; transition:.3s;
+}
+.glance-card:hover { border-color:var(--c1); transform:translateY(-4px); box-shadow:0 8px 24px #00e5ff18; }
+.glance-card:hover::after { opacity:1; }
+.glance-icon { font-size:28px; margin-bottom:8px; display:block; }
+.glance-lbl { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--tx5); letter-spacing:2px; margin-bottom:5px; text-transform:uppercase; }
+.glance-val { font-family:'Orbitron',monospace; font-size:14px; font-weight:700; color:var(--a1); }
+
+/* main flow diagram */
+.flow-diagram {
+  display:grid;
+  grid-template-columns:1fr 40px 1fr 40px 1fr 40px 1fr 40px 1fr;
+  gap:0; align-items:center; margin-bottom:20px;
+}
+.flow-node {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); padding:20px 14px; text-align:center;
+  cursor:pointer; transition:all .3s; position:relative; overflow:hidden;
+}
+.flow-node:hover { transform:scale(1.04); }
+.flow-node.sel {
+  border-color:var(--c1);
+  box-shadow:0 0 30px #00e5ff30, inset 0 0 30px #00e5ff08;
+}
+.flow-node::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  border-radius:var(--r12) var(--r12) 0 0;
+}
+.fn-res::before  { background:linear-gradient(90deg,var(--c1),var(--c2)); }
+.fn-sens::before { background:linear-gradient(90deg,var(--a1),var(--a2)); }
+.fn-ctrl::before { background:linear-gradient(90deg,var(--v1),var(--v2)); }
+.fn-grow::before { background:linear-gradient(90deg,var(--g1),var(--g2)); }
+.fn-cld::before  { background:linear-gradient(90deg,var(--c1),var(--v1)); }
+.flow-node .fni { font-size:32px; margin-bottom:10px; display:block; }
+.flow-node .fnt {
+  font-family:'Orbitron',monospace; font-size:12px; font-weight:700;
+  color:var(--tx1); margin-bottom:6px; letter-spacing:1px;
+}
+.flow-node .fns {
+  font-family:'Rajdhani',sans-serif; font-size:14px; color:var(--tx4); line-height:1.4;
+}
+
+.flow-arr {
+  display:flex; align-items:center; justify-content:center; position:relative;
+}
+.arr-track {
+  width:100%; height:2px; position:relative;
+  background:linear-gradient(90deg,var(--rim),var(--c1)88,var(--rim));
+  overflow:visible;
+}
+.arr-track::after {
+  content:'▶'; position:absolute; right:-6px; top:50%;
+  transform:translateY(-50%); color:var(--c1); font-size:10px;
+}
+.arr-particle {
+  position:absolute; width:8px; height:2px; background:var(--c1);
+  border-radius:1px; top:0; animation:particle 2s linear infinite;
+  box-shadow:0 0 6px var(--c1);
+}
+@keyframes particle { 0%{left:-8px;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{left:calc(100% + 8px);opacity:0} }
+
+/* info panel */
+.info-expand {
+  background:var(--panel2); border:1px solid var(--rim2);
+  border-radius:var(--r12); padding:24px;
+  display:none; animation:expand-in .35s cubic-bezier(.34,1.56,.64,1);
+  margin-bottom:32px;
+}
+.info-expand.open { display:block; }
+@keyframes expand-in { from{opacity:0;transform:scaleY(.85);transform-origin:top} to{opacity:1;transform:scaleY(1)} }
+.info-expand h3 {
+  font-family:'Orbitron',monospace; font-size:18px; font-weight:700;
+  color:var(--a1); margin-bottom:18px; letter-spacing:1px;
+}
+.info-items {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px;
+}
+.info-item {
+  background:var(--panel); border-radius:var(--r8);
+  border-left:3px solid var(--c1); padding:14px;
+}
+.info-item-lbl {
+  font-family:'Share Tech Mono',monospace; font-size:10px;
+  color:var(--tx5); letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.info-item-val {
+  font-family:'Rajdhani',sans-serif; font-size:15px; color:var(--tx1); line-height:1.5;
+}
+
+/* component cards */
+.comp-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+  gap:16px; margin-bottom:48px;
+}
+.comp-card {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); overflow:hidden; transition:all .3s;
+}
+.comp-card:hover { transform:translateY(-4px); box-shadow:0 12px 40px #00000060; border-color:var(--rim2); }
+.comp-head {
+  padding:16px 20px; display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid var(--rim); background:var(--panel);
+}
+.comp-ico { font-size:26px; }
+.comp-ttl { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; letter-spacing:1px; color:var(--tx1); }
+.comp-tag {
+  margin-left:auto; font-family:'Share Tech Mono',monospace; font-size:9px;
+  padding:3px 9px; border-radius:20px; letter-spacing:1px;
+}
+.tag-iot   { background:var(--c-dim); color:var(--c1); border:1px solid var(--c1)55; }
+.tag-mech  { background:var(--a-dim); color:var(--a1); border:1px solid var(--a1)55; }
+.tag-bio   { background:var(--g-dim); color:var(--g1); border:1px solid var(--g1)55; }
+.tag-sw    { background:var(--v-dim); color:var(--v1); border:1px solid var(--v1)55; }
+.comp-body { padding:16px 20px; }
+.comp-body p { font-size:15px; color:var(--tx3); line-height:1.6; margin-bottom:12px; }
+.spec-list { list-style:none; }
+.spec-list li {
+  font-size:14px; color:var(--tx5); padding:5px 0;
+  border-bottom:1px solid var(--rim); display:flex; justify-content:space-between;
+  font-family:'Rajdhani',sans-serif;
+}
+.spec-list li:last-child { border-bottom:none; }
+.spec-list li span { color:var(--tx2); font-weight:500; }
+
+/* stages */
+.stages-scroll {
+  display:flex; gap:0; overflow-x:auto; padding-bottom:10px; margin-bottom:48px;
+  scrollbar-width:thin; scrollbar-color:var(--rim) transparent;
+}
+.stage-card {
+  min-width:165px; background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); padding:18px; flex-shrink:0; position:relative;
+  transition:all .3s;
+}
+.stage-card:not(:last-child) { margin-right:28px; }
+.stage-card:not(:last-child)::after {
+  content:'→'; position:absolute; right:-20px; top:50%;
+  transform:translateY(-50%); color:var(--c1); font-size:18px; z-index:2;
+}
+.stage-card:hover { border-color:var(--c1); transform:translateY(-3px); }
+.stage-num { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--tx5); margin-bottom:6px; letter-spacing:2px; }
+.stage-ico { font-size:32px; margin-bottom:10px; display:block; }
+.stage-name { font-family:'Orbitron',monospace; font-size:12px; font-weight:700; margin-bottom:5px; color:var(--tx1); }
+.stage-days { font-size:13px; color:var(--c1); font-family:'Share Tech Mono',monospace; margin-bottom:6px; }
+.stage-info { font-size:13px; color:var(--tx4); line-height:1.5; }
+
+/* types */
+.types-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(255px,1fr));
+  gap:16px; margin-bottom:48px;
+}
+.type-card {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); padding:20px; transition:all .3s;
+}
+.type-card:hover { border-color:var(--a1); transform:translateY(-3px); box-shadow:0 8px 30px #ffb30018; }
+.type-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.type-ico { font-size:26px; }
+.type-name { font-family:'Orbitron',monospace; font-size:14px; font-weight:700; color:var(--tx1); }
+.type-diff { font-family:'Share Tech Mono',monospace; font-size:9px; padding:3px 9px; border-radius:12px; margin-left:auto; }
+.diff-e { background:var(--g-dim); color:var(--g1); }
+.diff-m { background:var(--a-dim); color:var(--a1); }
+.diff-h { background:#330010; color:var(--bad); }
+.type-desc { font-size:15px; color:var(--tx3); line-height:1.6; margin-bottom:10px; }
+.type-pros { font-size:13px; color:var(--tx5); }
+.type-pros em { color:var(--g1); font-style:normal; }
+
+/* nutrient cards */
+.nut-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:12px; margin-bottom:48px;
+}
+.nut-card {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); padding:16px; display:flex; flex-direction:column; gap:8px;
+  transition:all .3s;
+}
+.nut-card:hover { border-color:var(--rim2); transform:translateY(-2px); }
+.nut-name { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--tx1); }
+.nut-formula { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--c1); }
+.nut-role { font-size:14px; color:var(--tx4); line-height:1.5; }
+.nut-bar-wrap { display:flex; align-items:center; gap:8px; }
+.nut-bar { flex:1; height:4px; background:var(--rim); border-radius:2px; overflow:hidden; }
+.nut-fill { height:100%; border-radius:2px; transition:width 1.2s ease; }
+.nut-pct { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5); min-width:28px; text-align:right; }
+
+/* automation */
+.auto-flow { display:flex; flex-direction:column; gap:6px; margin-bottom:48px; }
+.auto-step {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r8); padding:16px 20px; position:relative;
+}
+.auto-step .a-ttl {
+  font-family:'Orbitron',monospace; font-size:13px; font-weight:700;
+  color:var(--tx1); margin-bottom:6px; letter-spacing:0.5px;
+}
+.auto-step .a-det {
+  font-size:15px; color:var(--tx4); line-height:1.6;
+}
+.auto-tag {
+  position:absolute; top:14px; right:14px;
+  font-family:'Share Tech Mono',monospace; font-size:9px;
+  padding:3px 8px; border-radius:3px; letter-spacing:1px;
+}
+.at-in   { background:var(--c-dim); color:var(--c1); }
+.at-proc { background:var(--a-dim); color:var(--a1); }
+.at-out  { background:var(--g-dim); color:var(--g1); }
+.at-al   { background:#330010; color:var(--bad); }
+.auto-conn { color:var(--c1); font-size:18px; text-align:center; padding:2px; }
+.auto-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.auto-2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+/* ══════════════════════════════════════
+   TAB 2 — DASHBOARD
+══════════════════════════════════════ */
+.dash-page { padding:24px; display:flex; flex-direction:column; gap:18px; }
+
+/* KPI strip */
+.kpi-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:12px; }
+.kpi-card {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); padding:18px 16px; position:relative; overflow:hidden;
+  transition:all .3s;
+}
+.kpi-card:hover { border-color:var(--rim2); }
+.kpi-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.kpi-top { position:absolute; top:14px; right:14px; }
+.kpi-dot {
+  width:8px; height:8px; border-radius:50%;
+  animation:pulse-dot 2s ease-in-out infinite;
+}
+.kpi-name {
+  font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5);
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;
+}
+.kpi-value {
+  font-family:'Orbitron',monospace; font-size:28px; font-weight:700;
+  line-height:1; margin-bottom:4px;
+}
+.kpi-unit { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--tx5); margin-bottom:10px; }
+.kpi-bar { height:4px; background:var(--rim); border-radius:2px; overflow:hidden; margin-bottom:8px; }
+.kpi-fill { height:100%; border-radius:2px; transition:width 1s ease; }
+.kpi-status { font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; }
+.val-ok   { color:var(--ok); }
+.val-warn { color:var(--warn); }
+.val-bad  { color:var(--bad); }
+
+/* chart row */
+.chart-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.chart-row-3 { display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; }
+
+.chart-card {
+  background:var(--panel2); border:1px solid var(--rim); border-radius:var(--r12); padding:20px;
+}
+.chart-title {
+  font-family:'Orbitron',monospace; font-size:11px; font-weight:600;
+  color:var(--tx4); letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;
+}
+.chart-sub { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5); }
+canvas.spark { width:100%; height:130px; display:block; }
+canvas.spark-sm { width:100%; height:100px; display:block; }
+
+/* actuators */
+.act-card {
+  background:var(--panel2); border:1px solid var(--rim); border-radius:var(--r12); padding:20px;
+}
+.act-list { display:flex; flex-direction:column; gap:8px; }
+.act-row {
+  display:flex; align-items:center; gap:12px; padding:10px 14px;
+  background:var(--panel); border-radius:var(--r8); border:1px solid var(--rim);
+  transition:all .3s;
+}
+.act-row:hover { border-color:var(--rim2); }
+.act-row-ico { font-size:18px; flex-shrink:0; }
+.act-row-name { font-family:'Rajdhani',sans-serif; font-size:15px; color:var(--tx2); font-weight:600; flex:1; }
+.act-row-stat { font-family:'Share Tech Mono',monospace; font-size:11px; min-width:28px; text-align:right; }
+/* toggle */
+.tog { position:relative; width:40px; height:22px; flex-shrink:0; }
+.tog input { opacity:0; width:0; height:0; position:absolute; }
+.tog-track {
+  position:absolute; inset:0; background:var(--rim2); border-radius:22px;
+  cursor:pointer; transition:.3s; border:1px solid var(--rim);
+}
+.tog-track::before {
+  content:''; position:absolute; width:16px; height:16px;
+  left:3px; top:2px; background:var(--tx5); border-radius:50%; transition:.3s;
+}
+.tog input:checked ~ .tog-track { background:#1a3d00; border-color:var(--ok); }
+.tog input:checked ~ .tog-track::before { transform:translateX(18px); background:var(--ok); box-shadow:0 0 8px var(--ok); }
+
+/* alert feed */
+.alert-card {
+  background:var(--panel2); border:1px solid var(--rim); border-radius:var(--r12); padding:20px;
+}
+.alert-feed { display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; }
+.alert-item {
+  display:flex; gap:10px; align-items:flex-start; padding:10px 12px;
+  border-radius:var(--r8); font-family:'Rajdhani',sans-serif; font-size:14px;
+  border-left:3px solid;
+}
+.alert-item.ok   { background:#00ff4408; border-color:var(--ok); }
+.alert-item.warn { background:#ffab4008; border-color:var(--warn); }
+.alert-item.crit { background:#ff174408; border-color:var(--bad); }
+.alert-body { flex:1; }
+.alert-txt { color:var(--tx2); }
+.alert-time { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5); margin-top:2px; }
+
+/* stats table */
+.stats-card {
+  background:var(--panel2); border:1px solid var(--rim); border-radius:var(--r12); padding:20px;
+}
+.stat-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 0; border-bottom:1px solid var(--rim);
+  font-family:'Rajdhani',sans-serif; font-size:15px;
+}
+.stat-row:last-child { border-bottom:none; }
+.stat-key { color:var(--tx4); }
+.stat-val { font-family:'Orbitron',monospace; font-size:13px; font-weight:600; color:var(--a1); }
+
+/* ══════════════════════════════════════
+   TAB 3 — DIGITAL TWIN
+══════════════════════════════════════ */
+.twin-layout {
+  display:grid;
+  grid-template-columns:290px 1fr 270px;
+  gap:16px; padding:20px;
+  min-height:calc(100vh - 62px);
+}
+
+/* left */
+.twin-left { display:flex; flex-direction:column; gap:14px; }
+.twin-card {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r12); padding:18px;
+}
+.twin-card-ttl {
+  font-family:'Orbitron',monospace; font-size:10px; font-weight:600;
+  color:var(--tx4); letter-spacing:3px; text-transform:uppercase; margin-bottom:14px;
+}
+/* sliders */
+.ctrl-row { margin-bottom:14px; }
+.ctrl-lbl {
+  display:flex; justify-content:space-between;
+  font-family:'Rajdhani',sans-serif; font-size:14px; color:var(--tx4);
+  margin-bottom:6px;
+}
+.ctrl-val { font-family:'Orbitron',monospace; font-size:14px; color:var(--a1); font-weight:700; }
+input[type=range] {
+  width:100%; height:4px; background:var(--rim2); border-radius:2px;
+  -webkit-appearance:none; cursor:pointer; accent-color:var(--c1);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+  background:var(--c1); border:2px solid var(--ink); box-shadow:0 0 8px var(--c1);
+}
+/* mode buttons */
+.mode-wrap { display:flex; flex-wrap:wrap; gap:6px; }
+.mode-btn {
+  padding:6px 12px; background:var(--panel); border:1px solid var(--rim);
+  border-radius:var(--r4); font-family:'Rajdhani',sans-serif; font-size:13px;
+  font-weight:600; color:var(--tx5); cursor:pointer; transition:all .2s; letter-spacing:0.5px;
+}
+.mode-btn:hover { color:var(--tx2); border-color:var(--rim2); }
+.mode-btn.active { background:var(--c-dim); color:var(--c1); border-color:var(--c1); box-shadow:0 0 12px #00e5ff20; }
+/* pump status */
+.pump-item {
+  display:flex; align-items:center; gap:10px; padding:8px 10px;
+  background:var(--panel); border-radius:var(--r8); border:1px solid var(--rim);
+  margin-bottom:6px;
+}
+.pump-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.pump-name { font-family:'Rajdhani',sans-serif; font-size:14px; color:var(--tx3); flex:1; }
+.pump-val { font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--g1); }
+/* mini kpis */
+.twin-kpi-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.tw-kpi {
+  background:var(--panel); border:1px solid var(--rim); border-radius:var(--r8); padding:10px;
+}
+.tw-kpi-n { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--tx5); letter-spacing:2px; margin-bottom:4px; }
+.tw-kpi-v { font-family:'Orbitron',monospace; font-size:20px; font-weight:700; }
+
+/* centre SVG */
+.twin-centre {
+  background:var(--panel2); border:1px solid var(--rim);
+  border-radius:var(--r16); padding:20px; display:flex; flex-direction:column;
+  position:relative; overflow:hidden;
+}
+.twin-centre-hdr {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px; flex-shrink:0;
+}
+.twin-mode-pill {
+  font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--a1);
+  background:var(--a-dim); border:1px solid var(--a1)55;
+  padding:4px 12px; border-radius:20px; letter-spacing:1px;
+}
+.twin-svg-wrap { flex:1; position:relative; display:flex; align-items:center; justify-content:center; }
+#twin-svg { width:100%; max-height:520px; }
+
+/* tooltip */
+.tw-tip {
+  position:absolute; background:var(--panel); border:1px solid var(--c1);
+  border-radius:var(--r8); padding:10px 14px; font-size:13px;
+  pointer-events:none; display:none; z-index:20; max-width:200px;
+  line-height:1.6; box-shadow:0 8px 24px #000a;
+}
+.tw-tip.show { display:block; }
+.tw-tip strong { color:var(--c1); font-family:'Orbitron',monospace; font-size:11px; display:block; margin-bottom:4px; }
+
+/* right */
+.twin-right { display:flex; flex-direction:column; gap:14px; }
+/* health ring */
+.health-wrap { text-align:center; padding:8px 0; }
+canvas#hRing { display:block; margin:0 auto 8px; }
+.health-num { font-family:'Orbitron',monospace; font-size:36px; font-weight:900; }
+.health-sub { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--tx5); letter-spacing:3px; }
+/* predictions */
+.pred-list { display:flex; flex-direction:column; gap:6px; }
+.pred-item {
+  display:flex; gap:10px; padding:10px 12px;
+  background:var(--panel); border-radius:var(--r8); border:1px solid var(--rim);
+}
+.pred-ico { font-size:15px; flex-shrink:0; }
+.pred-txt { font-family:'Rajdhani',sans-serif; font-size:14px; color:var(--tx4); line-height:1.5; }
+.pred-txt strong { color:var(--tx1); }
+/* mqtt stream */
+.stream-box {
+  max-height:160px; overflow-y:auto;
+  scrollbar-width:thin; scrollbar-color:var(--rim) transparent;
+}
+.stream-entry {
+  display:flex; gap:8px; align-items:baseline;
+  padding:3px 0; border-bottom:1px solid var(--rim);
+  font-family:'Share Tech Mono',monospace; font-size:11px;
+}
+.stream-t { color:var(--tx5); }
+.stream-topic { color:var(--c1); flex:1; }
+.stream-v { color:var(--a1); font-weight:600; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:1100px) {
+  .twin-layout { grid-template-columns:1fr 1fr; }
+  .twin-centre { grid-column:1/-1; order:-1; }
+  .chart-row-3 { grid-template-columns:1fr 1fr; }
+}
+@media(max-width:768px) {
+  .flow-diagram { grid-template-columns:1fr; }
+  .flow-arr { display:none; }
+  .twin-layout { grid-template-columns:1fr; }
+  .chart-row,.chart-row-3 { grid-template-columns:1fr; }
+  .auto-3,.auto-2 { grid-template-columns:1fr; }
+  .brand { min-width:auto; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ TOP BAR ══ -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">🌿</div>
+    <div class="brand-text">
+      <div class="brand-name">HYDROSYNC PRO</div>
+      <div class="brand-sub">IoT FARM INTELLIGENCE v3.1</div>
+    </div>
+  </div>
+
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('flow',this)">
+      <span class="ti">📐</span> SYSTEM FLOW
+    </button>
+    <button class="nav-tab" onclick="switchTab('dash',this)">
+      <span class="ti">📊</span> LIVE DASHBOARD
+    </button>
+    <button class="nav-tab" onclick="switchTab('twin',this)">
+      <span class="ti">🔬</span> DIGITAL TWIN PoC
+    </button>
+  </nav>
+
+  <div class="topbar-right">
+    <div class="live-indicator">
+      <div class="live-dot"></div> LIVE
+    </div>
+    <div class="sys-clock" id="clock">--:--:--</div>
+    <div class="conn-badge">ESP32 · MQTT</div>
+  </div>
+</header>
+
+<div class="content">
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — SYSTEM FLOW
+══════════════════════════════════════════ -->
+<div class="tab-pane active" id="tab-flow">
+<div class="flow-page">
+
+  <div class="flow-hero">
+    <div class="flow-pill">🌱 BEGINNER TO ADVANCED — COMPLETE SYSTEM GUIDE</div>
+    <h1 class="flow-h1">Smart Hydroponic<br>Farm System</h1>
+    <p class="flow-sub">IoT Sensors · Automation · Plant Science · Nutrient Chemistry</p>
+  </div>
+
+  <!-- Glance cards -->
+  <div class="sec-hdr"><div class="sec-icon">⚡</div><div class="sec-label">System at a Glance</div><div class="sec-line"></div></div>
+  <div class="glance-grid">
+    <div class="glance-card"><span class="glance-icon">💧</span><div class="glance-lbl">Water Use</div><div class="glance-val">90% Less</div></div>
+    <div class="glance-card"><span class="glance-icon">🌿</span><div class="glance-lbl">Growth Speed</div><div class="glance-val">2× Faster</div></div>
+    <div class="glance-card"><span class="glance-icon">📡</span><div class="glance-lbl">IoT Sensors</div><div class="glance-val">8+ Types</div></div>
+    <div class="glance-card"><span class="glance-icon">🤖</span><div class="glance-lbl">Automation</div><div class="glance-val">24/7</div></div>
+    <div class="glance-card"><span class="glance-icon">🌾</span><div class="glance-lbl">Soil Required</div><div class="glance-val">Zero</div></div>
+    <div class="glance-card"><span class="glance-icon">📱</span><div class="glance-lbl">Remote Control</div><div class="glance-val">Global</div></div>
+    <div class="glance-card"><span class="glance-icon">⚡</span><div class="glance-lbl">Yield Boost</div><div class="glance-val">+50%</div></div>
+    <div class="glance-card"><span class="glance-icon">🌡️</span><div class="glance-lbl">Precision</div><div class="glance-val">±0.1°C</div></div>
+  </div>
+
+  <!-- Flow Diagram -->
+  <div class="sec-hdr"><div class="sec-icon">🔄</div><div class="sec-label">Main System Flow — Click a Node to Explore</div><div class="sec-line"></div></div>
+  <div class="flow-diagram">
+    <div class="flow-node fn-res" onclick="showNodeInfo('reservoir',this)">
+      <span class="fni">🪣</span>
+      <div class="fnt">RESERVOIR</div>
+      <div class="fns">Nutrient solution · 200L HDPE · Opaque</div>
+    </div>
+    <div class="flow-arr"><div class="arr-track"><div class="arr-particle"></div></div></div>
+    <div class="flow-node fn-sens" onclick="showNodeInfo('sensors',this)">
+      <span class="fni">📡</span>
+      <div class="fnt">SENSORS</div>
+      <div class="fns">pH · EC · Temp · DO · Light · Flow</div>
+    </div>
+    <div class="flow-arr"><div class="arr-track"><div class="arr-particle" style="animation-delay:.5s"></div></div></div>
+    <div class="flow-node fn-ctrl" onclick="showNodeInfo('controller',this)">
+      <span class="fni">🧠</span>
+      <div class="fnt">CONTROLLER</div>
+      <div class="fns">ESP32 · Raspberry Pi · PID Logic</div>
+    </div>
+    <div class="flow-arr"><div class="arr-track"><div class="arr-particle" style="animation-delay:1s"></div></div></div>
+    <div class="flow-node fn-grow" onclick="showNodeInfo('grow',this)">
+      <span class="fni">🌿</span>
+      <div class="fnt">GROW BED</div>
+      <div class="fns">NFT · DWC · Aeroponics · Roots</div>
+    </div>
+    <div class="flow-arr"><div class="arr-track"><div class="arr-particle" style="animation-delay:1.5s"></div></div></div>
+    <div class="flow-node fn-cld" onclick="showNodeInfo('cloud',this)">
+      <span class="fni">☁️</span>
+      <div class="fnt">CLOUD</div>
+      <div class="fns">MQTT · Dashboard · Alerts · AI</div>
+    </div>
+  </div>
+
+  <div class="info-expand" id="node-info">
+    <h3 id="node-title">Select a node above</h3>
+    <div class="info-items" id="node-items"></div>
+  </div>
+
+  <!-- Components -->
+  <div class="sec-hdr"><div class="sec-icon">🔧</div><div class="sec-label">System Components — Deep Dive</div><div class="sec-line"></div></div>
+  <div class="comp-grid">
+    <div class="comp-card">
+      <div class="comp-head"><span class="comp-ico">📡</span><span class="comp-ttl">IoT Sensor Network</span><span class="comp-tag tag-iot">IoT</span></div>
+      <div class="comp-body">
+        <p>A mesh of precision sensors continuously monitors every critical parameter. Data transmitted wirelessly every 5–30 seconds via I²C/UART to microcontroller.</p>
+        <ul class="spec-list">
+          <li>pH Probe (Atlas Scientific)<span>±0.002 accuracy</span></li>
+          <li>EC / TDS Sensor<span>0–20 mS/cm range</span></li>
+          <li>DS18B20 Water Temp<span>Waterproof · ±0.5°C</span></li>
+          <li>Dissolved O₂ (DO)<span>Galvanic or optical</span></li>
+          <li>DHT22 Air Temp + RH<span>±0.5°C / ±2% RH</span></li>
+          <li>PPFD / PAR Light<span>µmol/m²/s quantum</span></li>
+          <li>Ultrasonic Level<span>HC-SR04 · reservoir</span></li>
+          <li>Flow Rate (YF-S201)<span>±3% pulse counting</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-head"><span class="comp-ico">🧠</span><span class="comp-ttl">Controller / Brain</span><span class="comp-tag tag-sw">SOFTWARE</span></div>
+      <div class="comp-body">
+        <p>Reads all sensor inputs, executes PID control algorithms, and triggers actuators via relay. Runs automation logic 24/7 with watchdog failsafe protection.</p>
+        <ul class="spec-list">
+          <li>Arduino Mega 2560<span>Beginner · ~£15</span></li>
+          <li>ESP32 (WiFi + BT)<span>IoT gateway · ~£5</span></li>
+          <li>Raspberry Pi 4B<span>Advanced · Linux OS</span></li>
+          <li>MQTT Broker<span>Mosquitto / HiveMQ</span></li>
+          <li>Node-RED / Python<span>Automation logic</span></li>
+          <li>Thingsboard / Blynk<span>Dashboard UI</span></li>
+          <li>Twilio / SendGrid<span>SMS / Email alerts</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-head"><span class="comp-ico">⚙️</span><span class="comp-ttl">Actuators & Control</span><span class="comp-tag tag-mech">MECHANICAL</span></div>
+      <div class="comp-body">
+        <p>The "muscles" — physical devices triggered by controller commands to maintain precise growing conditions automatically around the clock.</p>
+        <ul class="spec-list">
+          <li>Peristaltic Pumps<span>pH acid/base dosing</span></li>
+          <li>Nutrient Dosing Pumps<span>Part A + B auto-dose</span></li>
+          <li>Submersible Pump<span>NFT circulation</span></li>
+          <li>Air Pump + Diffuser<span>DWC oxygenation</span></li>
+          <li>8-ch Relay Module<span>Switches all devices</span></li>
+          <li>LED Grow Lights<span>Full spectrum · dimm.</span></li>
+          <li>Solenoid Valves<span>Water flow control</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-head"><span class="comp-ico">🌿</span><span class="comp-ttl">Growing Medium</span><span class="comp-tag tag-bio">BOTANICAL</span></div>
+      <div class="comp-body">
+        <p>Inert media replaces soil — anchors roots while allowing full oxygen and nutrient access. Selection depends on system type and crop choice.</p>
+        <ul class="spec-list">
+          <li>Rockwool (Stonewool)<span>Best for seedlings</span></li>
+          <li>Hydroton / LECA<span>Clay pebbles, reusable</span></li>
+          <li>Coco Coir<span>Eco-friendly · airy</span></li>
+          <li>Perlite / Vermiculite<span>Lightweight · drains well</span></li>
+          <li>Lettuce / Herbs<span>Easiest for beginners</span></li>
+          <li>Tomato / Capsicum<span>Intermediate level</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-head"><span class="comp-ico">🧪</span><span class="comp-ttl">Nutrient Solution</span><span class="comp-tag tag-bio">CHEMISTRY</span></div>
+      <div class="comp-body">
+        <p>Plants feed directly through water. A precisely formulated blend of macronutrients and micronutrients completely replaces soil fertility.</p>
+        <ul class="spec-list">
+          <li>Nitrogen (N) — NO₃⁻<span>Leaf & stem growth</span></li>
+          <li>Phosphorus (P) — H₂PO₄⁻<span>Root & flower dev.</span></li>
+          <li>Potassium (K) — K⁺<span>Disease resistance</span></li>
+          <li>Calcium (Ca²⁺)<span>Cell wall integrity</span></li>
+          <li>Magnesium (Mg²⁺)<span>Chlorophyll centre</span></li>
+          <li>pH optimal range<span>5.5 – 6.5</span></li>
+          <li>EC target range<span>1.2 – 2.5 mS/cm</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-head"><span class="comp-ico">☁️</span><span class="comp-ttl">Cloud & App Layer</span><span class="comp-tag tag-sw">IoT CLOUD</span></div>
+      <div class="comp-body">
+        <p>Sensor data streams to cloud platforms for persistent logging, real-time visualisation, remote control and predictive anomaly alerts.</p>
+        <ul class="spec-list">
+          <li>Thingsboard (OSS)<span>Rich dashboards</span></li>
+          <li>AWS IoT Core<span>Enterprise scale</span></li>
+          <li>Google Firebase<span>Mobile app backend</span></li>
+          <li>Grafana + InfluxDB<span>Time-series analytics</span></li>
+          <li>Telegram Bot API<span>Instant alerts · free</span></li>
+          <li>OTA Firmware Update<span>Remote flash ESP32</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Growth Stages -->
+  <div class="sec-hdr"><div class="sec-icon">🌱</div><div class="sec-label">Plant Growth Stages — Hydroponic Timeline</div><div class="sec-line"></div></div>
+  <div class="stages-scroll">
+    <div class="stage-card"><div class="stage-num">STAGE 01</div><span class="stage-ico">🌰</span><div class="stage-name">GERMINATION</div><div class="stage-days">Days 1–7</div><div class="stage-info">Rockwool cube · 22–25°C · pH water only · No nutrients · 16h light</div></div>
+    <div class="stage-card"><div class="stage-num">STAGE 02</div><span class="stage-ico">🌱</span><div class="stage-name">SEEDLING</div><div class="stage-days">Days 7–21</div><div class="stage-info">EC 0.4–0.8 · pH 5.8–6.0 · First true leaves · 18h photoperiod</div></div>
+    <div class="stage-card"><div class="stage-num">STAGE 03</div><span class="stage-ico">🪴</span><div class="stage-name">VEGETATIVE</div><div class="stage-days">Days 21–45</div><div class="stage-info">EC 1.2–2.0 · High N · Rapid growth · pH 5.5–6.5 · 18h light</div></div>
+    <div class="stage-card"><div class="stage-num">STAGE 04</div><span class="stage-ico">🌸</span><div class="stage-name">FLOWERING</div><div class="stage-days">Days 45–75</div><div class="stage-info">Boost P+K · EC 1.8–2.4 · 12h photoperiod triggers bloom</div></div>
+    <div class="stage-card"><div class="stage-num">STAGE 05</div><span class="stage-ico">🍅</span><div class="stage-name">FRUITING</div><div class="stage-days">Days 75–100</div><div class="stage-info">High K+Ca · EC 2.0–2.5 · Support structures · Monitor pests</div></div>
+    <div class="stage-card"><div class="stage-num">STAGE 06</div><span class="stage-ico">✂️</span><div class="stage-name">HARVEST</div><div class="stage-days">Day 100+</div><div class="stage-info">pH flush 7–14 days · Harvest at dawn · Sanitise and restart</div></div>
+  </div>
+
+  <!-- System Types -->
+  <div class="sec-hdr"><div class="sec-icon">🗂️</div><div class="sec-label">Hydroponic System Types</div><div class="sec-line"></div></div>
+  <div class="types-grid">
+    <div class="type-card"><div class="type-head"><span class="type-ico">💧</span><span class="type-name">DWC</span><span class="type-diff diff-e">EASY</span></div><p class="type-desc">Deep Water Culture — roots suspended in oxygenated solution. Air pump 24/7. Most popular beginner system.</p><div class="type-pros">✦ Low cost &nbsp; ✦ Fast growth &nbsp; <em>✦ Best for lettuce</em></div></div>
+    <div class="type-card"><div class="type-head"><span class="type-ico">🌊</span><span class="type-name">NFT</span><span class="type-diff diff-e">EASY</span></div><p class="type-desc">Nutrient Film Technique — thin film flows over roots in sloped channels. Excellent efficiency and scalability.</p><div class="type-pros">✦ Water-efficient &nbsp; ✦ Scalable &nbsp; <em>✦ Commercial choice</em></div></div>
+    <div class="type-card"><div class="type-head"><span class="type-ico">🌫️</span><span class="type-name">Aeroponics</span><span class="type-diff diff-h">ADVANCED</span></div><p class="type-desc">Roots misted every 1–5 min in air chamber. Maximum O₂ delivers fastest growth rates known. NASA technology.</p><div class="type-pros">✦ Fastest growth &nbsp; <em>✦ Space farm tech</em></div></div>
+    <div class="type-card"><div class="type-head"><span class="type-ico">🪣</span><span class="type-name">Ebb &amp; Flow</span><span class="type-diff diff-m">MEDIUM</span></div><p class="type-desc">Grow bed flooded periodically then drains back to reservoir by gravity. Timer-controlled pump cycles.</p><div class="type-pros">✦ Versatile &nbsp; ✦ Good for fruiting <em>✦ Easy to automate</em></div></div>
+    <div class="type-card"><div class="type-head"><span class="type-ico">🎋</span><span class="type-name">Kratky</span><span class="type-diff diff-e">EASY</span></div><p class="type-desc">Fully passive — no pump. Roots bridge nutrient-air gap naturally as level drops. Off-grid capable.</p><div class="type-pros">✦ No power &nbsp; ✦ Set and forget &nbsp; <em>✦ Herbs &amp; greens</em></div></div>
+    <div class="type-card"><div class="type-head"><span class="type-ico">🌱</span><span class="type-name">Drip System</span><span class="type-diff diff-m">MEDIUM</span></div><p class="type-desc">Nutrient solution drips via emitters to plant base. Standard in commercial greenhouses. Highly scalable.</p><div class="type-pros">✦ Any crop &nbsp; ✦ Scalable &nbsp; <em>✦ Precise control</em></div></div>
+  </div>
+
+  <!-- Nutrients -->
+  <div class="sec-hdr"><div class="sec-icon">🧪</div><div class="sec-label">Essential Nutrients — What Plants Eat</div><div class="sec-line"></div></div>
+  <div class="nut-grid">
+    <div class="nut-card"><div class="nut-name">🍃 Nitrogen</div><div class="nut-formula">N — NO₃⁻ / NH₄⁺</div><div class="nut-role">Drives leaf and stem growth. Essential for chlorophyll synthesis. Deficiency causes yellowing of older leaves.</div><div class="nut-bar-wrap"><div class="nut-bar"><div class="nut-fill" style="width:80%;background:var(--g1)"></div></div><span class="nut-pct">High</span></div></div>
+    <div class="nut-card"><div class="nut-name">🌸 Phosphorus</div><div class="nut-formula">P — H₂PO₄⁻</div><div class="nut-role">Root development and flowering. ATP energy transfer. Low P causes dark purple discolouration.</div><div class="nut-bar-wrap"><div class="nut-bar"><div class="nut-fill" style="width:60%;background:var(--v1)"></div></div><span class="nut-pct">Med</span></div></div>
+    <div class="nut-card"><div class="nut-name">💪 Potassium</div><div class="nut-formula">K — K⁺</div><div class="nut-role">Stomata regulation, water uptake, disease resistance. Deficiency = brown scorched leaf margins.</div><div class="nut-bar-wrap"><div class="nut-bar"><div class="nut-fill" style="width:70%;background:var(--a1)"></div></div><span class="nut-pct">Med</span></div></div>
+    <div class="nut-card"><div class="nut-name">🦴 Calcium</div><div class="nut-formula">Ca — Ca²⁺</div><div class="nut-role">Cell wall structural integrity. Prevents blossom end rot in tomatoes. Critical during fruiting stage.</div><div class="nut-bar-wrap"><div class="nut-bar"><div class="nut-fill" style="width:65%;background:var(--c1)"></div></div><span class="nut-pct">Med</span></div></div>
+    <div class="nut-card"><div class="nut-name">🌀 Magnesium</div><div class="nut-formula">Mg — Mg²⁺</div><div class="nut-role">Central atom of chlorophyll molecule. Backbone of photosynthesis. Deficiency = interveinal chlorosis.</div><div class="nut-bar-wrap"><div class="nut-bar"><div class="nut-fill" style="width:55%;background:var(--g2)"></div></div><span class="nut-pct">OK</span></div></div>
+    <div class="nut-card"><div class="nut-name">⚡ Iron</div><div class="nut-formula">Fe — Fe²⁺/Fe³⁺</div><div class="nut-role">Chlorophyll synthesis enzyme cofactor. Must use chelated form (EDTA/DTPA) to maintain solubility at pH &gt;6.</div><div class="nut-bar-wrap"><div class="nut-bar"><div class="nut-fill" style="width:45%;background:var(--warn)"></div></div><span class="nut-pct">Low</span></div></div>
+  </div>
+
+  <!-- Automation Logic -->
+  <div class="sec-hdr"><div class="sec-icon">🤖</div><div class="sec-label">IoT Automation Logic — Step by Step</div><div class="sec-line"></div></div>
+  <div class="auto-flow">
+    <div class="auto-step"><div class="auto-tag at-in">INPUT</div><div class="a-ttl">🔬 Sensors Collect Continuous Data</div><div class="a-det">pH probe, EC meter, temp sensors, DO sensor, flow meter and light sensors all sample at configured intervals (5s–5min). Digitised over I²C / UART / analog GPIO to microcontroller firmware.</div></div>
+    <div class="auto-conn">↓</div>
+    <div class="auto-step"><div class="auto-tag at-proc">PROCESS</div><div class="a-ttl">🧠 PID Controller Evaluates Thresholds</div><div class="a-det">ESP32/RPi compares every reading against programmed setpoints. Decision tree running at 1Hz: pH > 6.5 → dose acid · EC &lt; 1.2 → dose nutrients · Temp > 28°C → start fan + chiller · DO &lt; 6.0 → boost air pump</div></div>
+    <div class="auto-conn">↓</div>
+    <div class="auto-3">
+      <div class="auto-step"><div class="auto-tag at-out">ACTUATE</div><div class="a-ttl">💧 pH Correction</div><div class="a-det">Peristaltic pump doses pH-Up (KOH) or pH-Down (H₃PO₄). System waits 60s for mixing, then re-checks before further dosing.</div></div>
+      <div class="auto-step"><div class="auto-tag at-out">ACTUATE</div><div class="a-ttl">🧪 Nutrient Dosing</div><div class="a-det">Part A (Ca, K) then Part B (Mg, micronutrients) dosed sequentially with mixing delay to prevent precipitation reactions.</div></div>
+      <div class="auto-step"><div class="auto-tag at-out">ACTUATE</div><div class="a-ttl">💡 Light Schedule</div><div class="a-det">Relay switches LED grow lights per precise photoperiod. 18h/6h veg · 12h/12h flower. Dimming via PWM for dawn/dusk simulation.</div></div>
+    </div>
+    <div class="auto-conn">↓</div>
+    <div class="auto-step"><div class="auto-tag at-proc">TRANSMIT</div><div class="a-ttl">📡 MQTT Data Stream → Cloud</div><div class="a-det">Sensor readings published every 30 seconds. Topics: <code style="color:var(--c1);font-family:Share Tech Mono">farm/ph · farm/ec · farm/temp · farm/do · farm/ppfd</code>. Broker relays to Thingsboard/Firebase for persistent storage and live visualisation.</div></div>
+    <div class="auto-conn">↓</div>
+    <div class="auto-2">
+      <div class="auto-step"><div class="auto-tag at-al">ALERT</div><div class="a-ttl">🚨 Anomaly Detection & Failsafe</div><div class="a-det">pH &lt; 4.5 or > 8.0 → Emergency pump shutdown + Telegram alert + SMS + email. All critical events logged with ISO timestamp for audit trail.</div></div>
+      <div class="auto-step"><div class="auto-tag at-out">OUTPUT</div><div class="a-ttl">📱 Remote Dashboard & Override</div><div class="a-det">Grower views live charts and historical trends from anywhere via mobile app. Manual override of any actuator in real time. Camera feed optional.</div></div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /tab-flow -->
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — LIVE DASHBOARD
+══════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-dash">
+<div class="dash-page">
+
+  <!-- KPI strip -->
+  <div class="kpi-strip">
+    <div class="kpi-card" style="--acc:var(--c1)"><div class="kpi-card-bar" style="background:var(--c1)"></div>
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--ok)"></div></div>
+      <div class="kpi-name">pH LEVEL</div>
+      <div class="kpi-value val-ok" id="d-ph">6.2</div>
+      <div class="kpi-unit">TARGET 5.5 – 6.5</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-ph" style="background:var(--c1);width:62%"></div></div>
+      <div class="kpi-status val-ok" id="dt-ph">▲ Stable</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--g1)"></div></div>
+      <div class="kpi-name">EC NUTRIENTS</div>
+      <div class="kpi-value val-ok" id="d-ec">1.8</div>
+      <div class="kpi-unit">mS/cm · TARGET 1.5–2.5</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-ec" style="background:var(--g1);width:55%"></div></div>
+      <div class="kpi-status val-ok" id="dt-ec">▲ Optimal</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--warn)"></div></div>
+      <div class="kpi-name">WATER TEMP</div>
+      <div class="kpi-value val-warn" id="d-wt">24°C</div>
+      <div class="kpi-unit">TARGET 18 – 24°C</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-wt" style="background:var(--warn);width:75%"></div></div>
+      <div class="kpi-status val-warn" id="dt-wt">⚠ High limit</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--c1)"></div></div>
+      <div class="kpi-name">DISSOLVED O₂</div>
+      <div class="kpi-value val-ok" id="d-do">8.1</div>
+      <div class="kpi-unit">mg/L · MIN 6.0</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-do" style="background:var(--c1);width:70%"></div></div>
+      <div class="kpi-status val-ok" id="dt-do">▲ Good</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--ok)"></div></div>
+      <div class="kpi-name">AIR TEMP</div>
+      <div class="kpi-value val-ok" id="d-at">23°C</div>
+      <div class="kpi-unit">TARGET 20 – 26°C</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-at" style="background:var(--ok);width:58%"></div></div>
+      <div class="kpi-status val-ok" id="dt-at">▲ Optimal</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--v1)"></div></div>
+      <div class="kpi-name">HUMIDITY RH</div>
+      <div class="kpi-value val-ok" id="d-rh">68%</div>
+      <div class="kpi-unit">TARGET 60 – 70%</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-rh" style="background:var(--v1);width:68%"></div></div>
+      <div class="kpi-status val-ok" id="dt-rh">▲ Good</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--a1)"></div></div>
+      <div class="kpi-name">PPFD LIGHT</div>
+      <div class="kpi-value val-ok" id="d-lx">420</div>
+      <div class="kpi-unit">µmol/m²/s · T: 200–600</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-lx" style="background:var(--a1);width:60%"></div></div>
+      <div class="kpi-status val-ok" id="dt-lx">▲ Optimal</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-top"><div class="kpi-dot" style="background:var(--c2)"></div></div>
+      <div class="kpi-name">FLOW RATE</div>
+      <div class="kpi-value val-ok" id="d-fr">3.2</div>
+      <div class="kpi-unit">L/min · MIN 2.0</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="db-fr" style="background:var(--c2);width:58%"></div></div>
+      <div class="kpi-status val-ok" id="dt-fr">▲ Normal</div>
+    </div>
+  </div>
+
+  <!-- Chart row 1 -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-title">pH History — Last 60 Readings <span class="chart-sub">5-second intervals</span></div>
+      <canvas id="phChart" class="spark"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">EC History — Nutrient Concentration <span class="chart-sub">mS/cm</span></div>
+      <canvas id="ecChart" class="spark"></canvas>
+    </div>
+  </div>
+
+  <!-- Chart row 2 -->
+  <div class="chart-row-3">
+    <div class="chart-card">
+      <div class="chart-title">Water Temp + Dissolved O₂ <span class="chart-sub">°C / mg/L dual-axis</span></div>
+      <canvas id="tempChart" class="spark"></canvas>
+    </div>
+    <!-- Actuators -->
+    <div class="act-card">
+      <div class="chart-title">Actuator Controls</div>
+      <div class="act-list">
+        <div class="act-row"><span class="act-row-ico">💧</span><span class="act-row-name">Water Pump</span><label class="tog"><input type="checkbox" checked id="act-pump"><div class="tog-track"></div></label><span class="act-row-stat val-ok" id="stat-pump">ON</span></div>
+        <div class="act-row"><span class="act-row-ico">💨</span><span class="act-row-name">Air Pump</span><label class="tog"><input type="checkbox" checked id="act-air"><div class="tog-track"></div></label><span class="act-row-stat val-ok" id="stat-air">ON</span></div>
+        <div class="act-row"><span class="act-row-ico">💡</span><span class="act-row-name">LED Lights</span><label class="tog"><input type="checkbox" checked id="act-light"><div class="tog-track"></div></label><span class="act-row-stat val-ok" id="stat-light">ON</span></div>
+        <div class="act-row"><span class="act-row-ico">🌀</span><span class="act-row-name">Vent Fan</span><label class="tog"><input type="checkbox" id="act-fan"><div class="tog-track"></div></label><span class="act-row-stat val-warn" id="stat-fan">OFF</span></div>
+        <div class="act-row"><span class="act-row-ico">🧪</span><span class="act-row-name">pH-Down Pump</span><label class="tog"><input type="checkbox" id="act-phd"><div class="tog-track"></div></label><span class="act-row-stat val-warn" id="stat-phd">OFF</span></div>
+        <div class="act-row"><span class="act-row-ico">🔬</span><span class="act-row-name">Nutrient A</span><label class="tog"><input type="checkbox" id="act-nuta"><div class="tog-track"></div></label><span class="act-row-stat val-warn" id="stat-nuta">OFF</span></div>
+        <div class="act-row"><span class="act-row-ico">🔬</span><span class="act-row-name">Nutrient B</span><label class="tog"><input type="checkbox" id="act-nutb"><div class="tog-track"></div></label><span class="act-row-stat val-warn" id="stat-nutb">OFF</span></div>
+        <div class="act-row"><span class="act-row-ico">❄️</span><span class="act-row-name">Water Chiller</span><label class="tog"><input type="checkbox" id="act-chill"><div class="tog-track"></div></label><span class="act-row-stat val-warn" id="stat-chill">OFF</span></div>
+      </div>
+    </div>
+    <!-- Alerts -->
+    <div class="alert-card">
+      <div class="chart-title">System Alerts <span class="chart-sub" id="alert-count">0 active</span></div>
+      <div class="alert-feed" id="alert-list"></div>
+    </div>
+  </div>
+
+  <!-- Chart row 3 -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-title">Humidity + PPFD Light <span class="chart-sub">RH% / µmol scaled</span></div>
+      <canvas id="envChart" class="spark"></canvas>
+    </div>
+    <!-- Stats -->
+    <div class="stats-card">
+      <div class="chart-title">Session Statistics</div>
+      <div class="stat-row"><span class="stat-key">Average pH</span><span class="stat-val" id="avg-ph">6.1</span></div>
+      <div class="stat-row"><span class="stat-key">Average EC</span><span class="stat-val" id="avg-ec">1.8</span></div>
+      <div class="stat-row"><span class="stat-key">Average Temp</span><span class="stat-val" id="avg-wt">23°C</span></div>
+      <div class="stat-row"><span class="stat-key">Average DO</span><span class="stat-val" id="avg-do">8.0</span></div>
+      <div class="stat-row"><span class="stat-key">System Uptime</span><span class="stat-val" id="uptime">00:00:00</span></div>
+      <div class="stat-row"><span class="stat-key">Data Points</span><span class="stat-val" id="dpts">0</span></div>
+      <div class="stat-row"><span class="stat-key">Alerts Today</span><span class="stat-val" id="alert-today">0</span></div>
+      <div class="stat-row"><span class="stat-key">System Status</span><span class="stat-val" style="color:var(--ok)">NOMINAL</span></div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /tab-dash -->
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — DIGITAL TWIN
+══════════════════════════════════════════ -->
+<div class="tab-pane" id="tab-twin">
+<div class="twin-layout">
+
+  <!-- LEFT -->
+  <div class="twin-left">
+    <div class="twin-card">
+      <div class="twin-card-ttl">⚙️ Scenario Controls</div>
+      <div class="ctrl-row"><div class="ctrl-lbl"><span>pH Setpoint</span><span class="ctrl-val" id="sp-ph-v">6.0</span></div><input type="range" min="4" max="8" step="0.1" value="6.0" id="sp-ph" oninput="updateSP('ph',this.value)"></div>
+      <div class="ctrl-row"><div class="ctrl-lbl"><span>EC Setpoint (mS/cm)</span><span class="ctrl-val" id="sp-ec-v">1.8</span></div><input type="range" min="0.5" max="3.5" step="0.1" value="1.8" id="sp-ec" oninput="updateSP('ec',this.value)"></div>
+      <div class="ctrl-row"><div class="ctrl-lbl"><span>Light Intensity</span><span class="ctrl-val" id="sp-lx-v">70%</span></div><input type="range" min="0" max="100" step="5" value="70" id="sp-lx" oninput="updateSP('lx',this.value)"></div>
+      <div class="ctrl-row"><div class="ctrl-lbl"><span>Water Temp Target</span><span class="ctrl-val" id="sp-wt-v">22°C</span></div><input type="range" min="15" max="30" step="0.5" value="22" id="sp-wt" oninput="updateSP('wt',this.value)"></div>
+    </div>
+
+    <div class="twin-card">
+      <div class="twin-card-ttl">🌱 Growth Mode Simulator</div>
+      <div class="mode-wrap">
+        <div class="mode-btn active" onclick="setGrowMode('seedling',this)">Seedling</div>
+        <div class="mode-btn" onclick="setGrowMode('veg',this)">Vegetative</div>
+        <div class="mode-btn" onclick="setGrowMode('flower',this)">Flowering</div>
+        <div class="mode-btn" onclick="setGrowMode('fruiting',this)">Fruiting</div>
+        <div class="mode-btn" onclick="setGrowMode('kratky',this)">Kratky</div>
+        <div class="mode-btn" onclick="setGrowMode('stress',this)" style="color:var(--bad)">⚠ Stress</div>
+      </div>
+    </div>
+
+    <div class="twin-card">
+      <div class="twin-card-ttl">🔄 Active Pumps</div>
+      <div class="pump-item"><div class="pump-dot" style="background:var(--ok)"></div><span class="pump-name">Water Pump</span><span class="pump-val">3.2 L/m</span></div>
+      <div class="pump-item"><div class="pump-dot" style="background:var(--ok)"></div><span class="pump-name">Air Pump</span><span class="pump-val">2.4 L/m</span></div>
+      <div class="pump-item"><div class="pump-dot" style="background:var(--rim2)" id="dot-phd"></div><span class="pump-name">pH-Down Pump</span><span class="pump-val" id="pv-phd">IDLE</span></div>
+      <div class="pump-item"><div class="pump-dot" style="background:var(--rim2)" id="dot-na"></div><span class="pump-name">Nutrient A</span><span class="pump-val" id="pv-na">IDLE</span></div>
+      <div class="pump-item"><div class="pump-dot" style="background:var(--rim2)" id="dot-nb"></div><span class="pump-name">Nutrient B</span><span class="pump-val" id="pv-nb">IDLE</span></div>
+    </div>
+
+    <div class="twin-card">
+      <div class="twin-card-ttl">📊 Live Twin KPIs</div>
+      <div class="twin-kpi-grid">
+        <div class="tw-kpi"><div class="tw-kpi-n">pH</div><div class="tw-kpi-v val-ok" id="tw-ph">6.2</div></div>
+        <div class="tw-kpi"><div class="tw-kpi-n">EC mS/cm</div><div class="tw-kpi-v val-ok" id="tw-ec">1.8</div></div>
+        <div class="tw-kpi"><div class="tw-kpi-n">Temp °C</div><div class="tw-kpi-v val-warn" id="tw-wt">24</div></div>
+        <div class="tw-kpi"><div class="tw-kpi-n">DO mg/L</div><div class="tw-kpi-v val-ok" id="tw-do">8.1</div></div>
+        <div class="tw-kpi"><div class="tw-kpi-n">RH %</div><div class="tw-kpi-v val-ok" id="tw-rh">68</div></div>
+        <div class="tw-kpi"><div class="tw-kpi-n">PPFD</div><div class="tw-kpi-v val-ok" id="tw-lx">420</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTRE SVG TWIN -->
+  <div class="twin-centre">
+    <div class="twin-centre-hdr">
+      <div style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--tx2);letter-spacing:2px;">🔬 DIGITAL TWIN — LIVE FARM VISUALISATION</div>
+      <div class="twin-mode-pill" id="twin-mode-lbl">MODE: SEEDLING</div>
+    </div>
+    <div class="twin-svg-wrap">
+      <svg id="twin-svg" viewBox="0 0 720 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bgG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#020c0e"/>
+            <stop offset="100%" stop-color="#041418"/>
+          </linearGradient>
+          <linearGradient id="resG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#001820"/>
+            <stop offset="100%" stop-color="#000e18"/>
+          </linearGradient>
+          <linearGradient id="waterG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00e5ff" stop-opacity=".5"/>
+            <stop offset="100%" stop-color="#0088aa" stop-opacity=".8"/>
+          </linearGradient>
+          <linearGradient id="bedG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0d2a1a"/>
+            <stop offset="100%" stop-color="#071a10"/>
+          </linearGradient>
+          <filter id="glow-c">
+            <feGaussianBlur stdDeviation="2.5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="glow-a">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <marker id="arC" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#00e5ff"/>
+          </marker>
+          <marker id="arA" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L6,3 z" fill="#ffb300"/>
+          </marker>
+        </defs>
+
+        <!-- Background -->
+        <rect width="720" height="560" fill="url(#bgG)" rx="8"/>
+        <g stroke="#0e3d4a" stroke-width=".5" opacity=".6">
+          <line x1="0" y1="70" x2="720" y2="70"/><line x1="0" y1="140" x2="720" y2="140"/>
+          <line x1="0" y1="210" x2="720" y2="210"/><line x1="0" y1="280" x2="720" y2="280"/>
+          <line x1="0" y1="350" x2="720" y2="350"/><line x1="0" y1="420" x2="720" y2="420"/>
+          <line x1="0" y1="490" x2="720" y2="490"/>
+          <line x1="90" y1="0" x2="90" y2="560"/><line x1="180" y1="0" x2="180" y2="560"/>
+          <line x1="270" y1="0" x2="270" y2="560"/><line x1="360" y1="0" x2="360" y2="560"/>
+          <line x1="450" y1="0" x2="450" y2="560"/><line x1="540" y1="0" x2="540" y2="560"/>
+          <line x1="630" y1="0" x2="630" y2="560"/>
+        </g>
+
+        <!-- LED BAR -->
+        <rect x="110" y="18" width="500" height="22" rx="5" fill="#1a1200" stroke="#ffb300" stroke-width="1.5" filter="url(#glow-a)"/>
+        <text x="360" y="33" text-anchor="middle" fill="#ffb300" font-size="10" font-family="Share Tech Mono" letter-spacing="2">⚡ FULL-SPECTRUM LED GROW LIGHTS — 600W</text>
+        <!-- rays -->
+        <g opacity=".12" id="rays">
+          <line x1="150" y1="40" x2="130" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+          <line x1="210" y1="40" x2="190" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+          <line x1="270" y1="40" x2="260" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+          <line x1="360" y1="40" x2="360" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+          <line x1="450" y1="40" x2="450" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+          <line x1="510" y1="40" x2="520" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+          <line x1="570" y1="40" x2="585" y2="115" stroke="#ffff88" stroke-width="1.5"/>
+        </g>
+        <!-- health badge -->
+        <rect x="285" y="70" width="150" height="26" rx="6" fill="#00e5ff18" stroke="#00e5ff" stroke-width="1"/>
+        <text x="360" y="87" text-anchor="middle" fill="#00e5ff" font-size="11" font-family="Share Tech Mono" id="health-badge">HEALTH: 94% ✓</text>
+
+        <!-- NFT CHANNELS -->
+        <rect x="108" y="118" width="504" height="32" rx="5" fill="url(#bedG)" stroke="#164d5c" stroke-width="1.5"/>
+        <rect x="108" y="168" width="504" height="32" rx="5" fill="url(#bedG)" stroke="#164d5c" stroke-width="1.5"/>
+        <rect x="108" y="218" width="504" height="32" rx="5" fill="url(#bedG)" stroke="#164d5c" stroke-width="1.5"/>
+        <!-- channel labels -->
+        <text x="96" y="138" text-anchor="end" fill="#164d5c" font-size="9" font-family="Share Tech Mono">CH1</text>
+        <text x="96" y="188" text-anchor="end" fill="#164d5c" font-size="9" font-family="Share Tech Mono">CH2</text>
+        <text x="96" y="238" text-anchor="end" fill="#164d5c" font-size="9" font-family="Share Tech Mono">CH3</text>
+        <!-- water film animated -->
+        <rect x="110" y="146" width="500" height="3" rx="1" fill="#00e5ff" opacity=".25">
+          <animate attributeName="opacity" values=".15;.35;.15" dur="3s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="110" y="196" width="500" height="3" rx="1" fill="#00e5ff" opacity=".25">
+          <animate attributeName="opacity" values=".25;.15;.25" dur="2.5s" repeatCount="indefinite"/>
+        </rect>
+        <rect x="110" y="246" width="500" height="3" rx="1" fill="#00e5ff" opacity=".25">
+          <animate attributeName="opacity" values=".2;.3;.2" dur="4s" repeatCount="indefinite"/>
+        </rect>
+
+        <!-- PLANTS ROW 1 (mature) -->
+        <g id="p-row1">
+          <g transform="translate(150,118)"><rect x="-9" y="-3" width="18" height="9" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-3" x2="0" y2="-38" stroke="#1a4a20" stroke-width="2.5" filter="url(#glow-c)"/><ellipse cx="-13" cy="-46" rx="15" ry="10" fill="#2a8040" opacity=".9"/><ellipse cx="13" cy="-43" rx="13" ry="8" fill="#33a050"/><ellipse cx="0" cy="-52" rx="10" ry="7" fill="#76ff03" filter="url(#glow-c)"/></g>
+          <g transform="translate(230,118)"><rect x="-9" y="-3" width="18" height="9" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-3" x2="0" y2="-35" stroke="#1a4a20" stroke-width="2.5"/><ellipse cx="-12" cy="-43" rx="14" ry="9" fill="#2a8040" opacity=".9"/><ellipse cx="12" cy="-40" rx="12" ry="8" fill="#33a050"/><ellipse cx="0" cy="-49" rx="9" ry="6" fill="#76ff03"/></g>
+          <g transform="translate(310,118)"><rect x="-9" y="-3" width="18" height="9" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-3" x2="0" y2="-40" stroke="#1a4a20" stroke-width="2.5"/><ellipse cx="-14" cy="-49" rx="16" ry="11" fill="#2a8040"/><ellipse cx="14" cy="-46" rx="13" ry="9" fill="#33a050"/><ellipse cx="0" cy="-57" rx="11" ry="8" fill="#76ff03" filter="url(#glow-c)"/></g>
+          <g transform="translate(390,118)"><rect x="-9" y="-3" width="18" height="9" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-3" x2="0" y2="-33" stroke="#1a4a20" stroke-width="2.5"/><ellipse cx="-12" cy="-41" rx="13" ry="9" fill="#2a8040"/><ellipse cx="12" cy="-38" rx="11" ry="7" fill="#33a050"/><ellipse cx="0" cy="-47" rx="9" ry="6" fill="#76ff03"/></g>
+          <g transform="translate(470,118)"><rect x="-9" y="-3" width="18" height="9" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-3" x2="0" y2="-42" stroke="#1a4a20" stroke-width="2.5"/><ellipse cx="-15" cy="-51" rx="16" ry="11" fill="#2a8040"/><ellipse cx="15" cy="-48" rx="14" ry="9" fill="#33a050"/><ellipse cx="0" cy="-58" rx="11" ry="8" fill="#76ff03" filter="url(#glow-c)"/></g>
+          <g transform="translate(550,118)"><rect x="-9" y="-3" width="18" height="9" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-3" x2="0" y2="-36" stroke="#1a4a20" stroke-width="2.5"/><ellipse cx="-12" cy="-44" rx="14" ry="9" fill="#2a8040"/><ellipse cx="12" cy="-41" rx="12" ry="8" fill="#33a050"/><ellipse cx="0" cy="-50" rx="9" ry="7" fill="#76ff03"/></g>
+        </g>
+        <!-- PLANTS ROW 2 (medium) -->
+        <g id="p-row2">
+          <g transform="translate(170,168)"><rect x="-8" y="-2" width="16" height="8" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-26" stroke="#1a4a20" stroke-width="2"/><ellipse cx="-10" cy="-33" rx="12" ry="8" fill="#2a8040"/><ellipse cx="10" cy="-30" rx="10" ry="6" fill="#76ff03"/></g>
+          <g transform="translate(270,168)"><rect x="-8" y="-2" width="16" height="8" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-24" stroke="#1a4a20" stroke-width="2"/><ellipse cx="-9" cy="-30" rx="11" ry="7" fill="#2a8040"/><ellipse cx="9" cy="-27" rx="9" ry="6" fill="#76ff03"/></g>
+          <g transform="translate(370,168)"><rect x="-8" y="-2" width="16" height="8" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-28" stroke="#1a4a20" stroke-width="2"/><ellipse cx="-11" cy="-35" rx="12" ry="8" fill="#2a8040"/><ellipse cx="11" cy="-32" rx="10" ry="6" fill="#76ff03"/></g>
+          <g transform="translate(470,168)"><rect x="-8" y="-2" width="16" height="8" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-22" stroke="#1a4a20" stroke-width="2"/><ellipse cx="-8" cy="-28" rx="10" ry="6" fill="#2a8040"/><ellipse cx="8" cy="-25" rx="8" ry="5" fill="#76ff03"/></g>
+          <g transform="translate(560,168)"><rect x="-8" y="-2" width="16" height="8" rx="3" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-25" stroke="#1a4a20" stroke-width="2"/><ellipse cx="-9" cy="-31" rx="11" ry="7" fill="#2a8040"/><ellipse cx="9" cy="-28" rx="9" ry="6" fill="#76ff03"/></g>
+        </g>
+        <!-- PLANTS ROW 3 (seedlings) -->
+        <g id="p-row3">
+          <g transform="translate(190,218)"><rect x="-6" y="-2" width="12" height="6" rx="2" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-16" stroke="#1a4a20" stroke-width="1.5"/><ellipse cx="-5" cy="-21" rx="7" ry="5" fill="#33a050"/><ellipse cx="5" cy="-19" rx="6" ry="4" fill="#76ff03"/></g>
+          <g transform="translate(320,218)"><rect x="-6" y="-2" width="12" height="6" rx="2" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-14" stroke="#1a4a20" stroke-width="1.5"/><ellipse cx="-5" cy="-19" rx="7" ry="4" fill="#33a050"/><ellipse cx="5" cy="-17" rx="6" ry="3" fill="#76ff03"/></g>
+          <g transform="translate(450,218)"><rect x="-6" y="-2" width="12" height="6" rx="2" fill="#0d2a1a" stroke="#164d5c" stroke-width="1"/><line x1="0" y1="-2" x2="0" y2="-18" stroke="#1a4a20" stroke-width="1.5"/><ellipse cx="-6" cy="-23" rx="8" ry="5" fill="#33a050"/><ellipse cx="6" cy="-21" rx="7" ry="4" fill="#76ff03"/></g>
+        </g>
+
+        <!-- RESERVOIR -->
+        <rect x="255" y="278" width="210" height="130" rx="8" fill="url(#resG)" stroke="#164d5c" stroke-width="2"/>
+        <rect x="258" y="322" width="204" height="84" rx="5" fill="url(#waterG)"/>
+        <!-- bubbles -->
+        <circle cx="290" cy="375" r="4" fill="none" stroke="#00e5ff" stroke-width="1" opacity=".4"><animate attributeName="cy" values="385;270" dur="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.5;0" dur="3s" repeatCount="indefinite"/></circle>
+        <circle cx="330" cy="360" r="3" fill="none" stroke="#00e5ff" stroke-width="1" opacity=".3"><animate attributeName="cy" values="390;280" dur="2.5s" repeatCount="indefinite" begin=".8s"/><animate attributeName="opacity" values="0;.4;0" dur="2.5s" repeatCount="indefinite" begin=".8s"/></circle>
+        <circle cx="410" cy="370" r="4" fill="none" stroke="#00e5ff" stroke-width="1" opacity=".4"><animate attributeName="cy" values="385;275" dur="3.5s" repeatCount="indefinite" begin="1.2s"/><animate attributeName="opacity" values="0;.5;0" dur="3.5s" repeatCount="indefinite" begin="1.2s"/></circle>
+        <circle cx="440" cy="355" r="3" fill="none" stroke="#00e5ff" stroke-width="1" opacity=".3"><animate attributeName="cy" values="390;285" dur="2.8s" repeatCount="indefinite" begin=".4s"/><animate attributeName="opacity" values="0;.4;0" dur="2.8s" repeatCount="indefinite" begin=".4s"/></circle>
+        <text x="360" y="300" text-anchor="middle" fill="#164d5c" font-size="10" font-family="Share Tech Mono" letter-spacing="1">NUTRIENT RESERVOIR</text>
+        <text x="360" y="314" text-anchor="middle" fill="#0e3d4a" font-size="9" font-family="Share Tech Mono">200L · HDPE · pH-buffered</text>
+
+        <!-- SENSOR NODES -->
+        <g transform="translate(218,305)" style="cursor:pointer" onclick="showTwinTip(event,'pH SENSOR','Current: 6.2 · Status: NOMINAL · Atlas Scientific EZO-pH probe · Resolution: 0.001 pH unit')">
+          <circle r="13" fill="#00e5ff18" stroke="#00e5ff" stroke-width="1.5" filter="url(#glow-c)"/>
+          <text text-anchor="middle" dy="5" fill="#00e5ff" font-size="10" font-family="Share Tech Mono">pH</text>
+        </g>
+        <g transform="translate(218,338)" style="cursor:pointer" onclick="showTwinTip(event,'EC SENSOR','EC: 1.8 mS/cm · TDS: 900 ppm · Temp-compensated · Range: 0–20 mS/cm')">
+          <circle r="13" fill="#76ff0318" stroke="#76ff03" stroke-width="1.5"/>
+          <text text-anchor="middle" dy="5" fill="#76ff03" font-size="9" font-family="Share Tech Mono">EC</text>
+        </g>
+        <g transform="translate(218,371)" style="cursor:pointer" onclick="showTwinTip(event,'TEMP SENSOR','Water: 24°C · Air: 23°C · DS18B20 waterproof · ±0.5°C · 1-Wire bus')">
+          <circle r="13" fill="#ffb30018" stroke="#ffb300" stroke-width="1.5"/>
+          <text text-anchor="middle" dy="5" fill="#ffb300" font-size="9" font-family="Share Tech Mono">T°</text>
+        </g>
+        <g transform="translate(218,404)" style="cursor:pointer" onclick="showTwinTip(event,'DO SENSOR','Dissolved O₂: 8.1 mg/L · Saturation: 82% · Optical galvanic · Min threshold: 6.0 mg/L')">
+          <circle r="13" fill="#ea80fc18" stroke="#ea80fc" stroke-width="1.5"/>
+          <text text-anchor="middle" dy="5" fill="#ea80fc" font-size="9" font-family="Share Tech Mono">DO</text>
+        </g>
+
+        <!-- PUMP unit -->
+        <rect x="100" y="305" width="68" height="46" rx="6" fill="#041818" stroke="#164d5c" stroke-width="1.5"/>
+        <text x="134" y="323" text-anchor="middle" fill="#164d5c" font-size="9" font-family="Share Tech Mono">WATER</text>
+        <text x="134" y="336" text-anchor="middle" fill="#164d5c" font-size="9" font-family="Share Tech Mono">PUMP</text>
+        <text x="134" y="349" text-anchor="middle" fill="#00e5ff" font-size="11" font-family="Share Tech Mono" id="pump-lbl">💧 ON</text>
+
+        <!-- AIR PUMP -->
+        <rect x="100" y="363" width="68" height="40" rx="6" fill="#041818" stroke="#164d5c" stroke-width="1.5"/>
+        <text x="134" y="379" text-anchor="middle" fill="#164d5c" font-size="9" font-family="Share Tech Mono">AIR PUMP</text>
+        <text x="134" y="395" text-anchor="middle" fill="#ea80fc" font-size="11" font-family="Share Tech Mono">💨 ON</text>
+
+        <!-- CONTROLLER BOX -->
+        <rect x="486" y="290" width="140" height="90" rx="8" fill="#041418" stroke="#ffb300" stroke-width="1.5" filter="url(#glow-a)"/>
+        <text x="556" y="310" text-anchor="middle" fill="#ffb300" font-size="11" font-family="Orbitron" font-weight="700">🧠 ESP32</text>
+        <text x="556" y="327" text-anchor="middle" fill="#164d5c" font-size="9" font-family="Share Tech Mono">CONTROLLER v3.1</text>
+        <text x="556" y="344" text-anchor="middle" fill="#76ff03" font-size="10" font-family="Share Tech Mono" id="ctrl-st">STATUS: NOMINAL</text>
+        <text x="556" y="358" text-anchor="middle" fill="#0e3d4a" font-size="8" font-family="Share Tech Mono">MQTT · 5GHz WiFi</text>
+        <text x="556" y="372" text-anchor="middle" fill="#0e3d4a" font-size="8" font-family="Share Tech Mono" id="ctrl-loop">Loop: 824ms</text>
+
+        <!-- DOSING PODS -->
+        <rect x="486" y="394" width="64" height="32" rx="5" fill="#041418" stroke="#164d5c" stroke-width="1"/>
+        <text x="518" y="407" text-anchor="middle" fill="#164d5c" font-size="8" font-family="Share Tech Mono">pH-DOWN</text>
+        <text x="518" y="420" text-anchor="middle" fill="#0e3d4a" font-size="9" font-family="Share Tech Mono" id="dose-ph">IDLE</text>
+        <rect x="562" y="394" width="64" height="32" rx="5" fill="#041418" stroke="#164d5c" stroke-width="1"/>
+        <text x="594" y="407" text-anchor="middle" fill="#164d5c" font-size="8" font-family="Share Tech Mono">NUT A+B</text>
+        <text x="594" y="420" text-anchor="middle" fill="#0e3d4a" font-size="9" font-family="Share Tech Mono" id="dose-nut">IDLE</text>
+
+        <!-- CLOUD -->
+        <ellipse cx="640" cy="470" rx="58" ry="34" fill="#0d0020" stroke="#ea80fc" stroke-width="1.2"/>
+        <text x="640" y="466" text-anchor="middle" fill="#ea80fc" font-size="10" font-family="Share Tech Mono">☁ CLOUD</text>
+        <text x="640" y="480" text-anchor="middle" fill="#5c2a7a" font-size="9" font-family="Share Tech Mono">MQTT · LIVE</text>
+
+        <!-- FLOW PIPES animated -->
+        <path d="M610,258 L610,140" stroke="#00e5ff" stroke-width="2" fill="none" stroke-dasharray="8,4" marker-end="url(#arC)">
+          <animate attributeName="stroke-dashoffset" values="0;-12" dur=".8s" repeatCount="indefinite"/>
+        </path>
+        <path d="M110,258 L110,140" stroke="#00e5ff" stroke-width="2" fill="none" stroke-dasharray="8,4">
+          <animate attributeName="stroke-dashoffset" values="12;0" dur=".8s" repeatCount="indefinite"/>
+        </path>
+        <path d="M168,328 L255,328" stroke="#00e5ff" stroke-width="1.5" fill="none" stroke-dasharray="5,3" opacity=".7">
+          <animate attributeName="stroke-dashoffset" values="0;-8" dur=".7s" repeatCount="indefinite"/>
+        </path>
+        <path d="M168,308 L168,260 L610,260 L610,258" stroke="#76ff03" stroke-width="1.5" fill="none" stroke-dasharray="6,3" marker-end="url(#arA)">
+          <animate attributeName="stroke-dashoffset" values="0;-9" dur=".65s" repeatCount="indefinite"/>
+        </path>
+        <line x1="465" y1="335" x2="486" y2="335" stroke="#ffb300" stroke-width="1" stroke-dasharray="3,2"/>
+        <line x1="626" y1="335" x2="636" y2="438" stroke="#ea80fc" stroke-width="1" stroke-dasharray="4,3" opacity=".6"/>
+
+        <!-- Floating sensor readings -->
+        <g transform="translate(360,448)">
+          <rect x="-36" y="-13" width="72" height="24" rx="5" fill="#00e5ff16" stroke="#00e5ff" stroke-width="1"/>
+          <text text-anchor="middle" dy="5" fill="#00e5ff" font-size="12" font-family="Orbitron" font-weight="700" id="fv-ph">pH 6.2</text>
+        </g>
+        <g transform="translate(360,480)">
+          <rect x="-36" y="-13" width="72" height="24" rx="5" fill="#76ff0316" stroke="#76ff03" stroke-width="1"/>
+          <text text-anchor="middle" dy="5" fill="#76ff03" font-size="12" font-family="Orbitron" font-weight="700" id="fv-ec">EC 1.8</text>
+        </g>
+        <g transform="translate(360,512)">
+          <rect x="-40" y="-13" width="80" height="24" rx="5" fill="#ffb30016" stroke="#ffb300" stroke-width="1"/>
+          <text text-anchor="middle" dy="5" fill="#ffb300" font-size="12" font-family="Orbitron" font-weight="700" id="fv-wt">T° 24.0°C</text>
+        </g>
+
+        <!-- labels -->
+        <text x="618" y="255" fill="#00e5ff" font-size="9" font-family="Share Tech Mono">SUPPLY→</text>
+        <text x="113" y="255" fill="#00e5ff" font-size="9" font-family="Share Tech Mono">←RETURN</text>
+      </svg>
+      <div class="tw-tip" id="twin-tip"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="twin-right">
+    <div class="twin-card">
+      <div class="twin-card-ttl">🏥 Plant Health Score</div>
+      <div class="health-wrap">
+        <canvas id="hRing" width="130" height="130"></canvas>
+        <div class="health-num val-ok" id="health-score">94</div>
+        <div class="health-sub">/ 100 OVERALL SCORE</div>
+      </div>
+    </div>
+
+    <div class="twin-card">
+      <div class="twin-card-ttl">🔮 AI Predictions</div>
+      <div class="pred-list" id="pred-list">
+        <div class="pred-item"><span class="pred-ico">📉</span><div class="pred-txt"><strong>pH drift detected</strong> — expected to drop below 5.8 in ~42 min at current rate. Pre-emptive dosing recommended.</div></div>
+        <div class="pred-item"><span class="pred-ico">💧</span><div class="pred-txt"><strong>Reservoir</strong> — 68% remaining. Refill recommended within 18 hours to avoid disruption.</div></div>
+        <div class="pred-item"><span class="pred-ico">🌡️</span><div class="pred-txt"><strong>Water temp rising</strong> — approaching 24°C limit. Consider activating chiller module.</div></div>
+        <div class="pred-item"><span class="pred-ico">🌿</span><div class="pred-txt"><strong>Growth optimal</strong> — all parameters within vegetative growth target windows.</div></div>
+      </div>
+    </div>
+
+    <div class="twin-card">
+      <div class="twin-card-ttl">📡 MQTT Live Stream</div>
+      <div class="stream-box" id="stream-list"></div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /tab-twin -->
+</div><!-- content -->
+</div><!-- shell -->
+
+<script>
+/* ═══════════════════════════════
+   GLOBAL STATE
+═══════════════════════════════ */
+const S = {
+  ph:6.2, ec:1.8, wt:24, do_:8.1, at:23, rh:68, lx:420, fr:3.2,
+  sp:{ph:6.0,ec:1.8,lx:70,wt:22},
+  mode:'seedling',
+  t0:Date.now(), pts:0, alertsN:0,
+};
+const phH=[],ecH=[],wtH=[],doH=[],rhH=[],lxH=[];
+const allAlerts=[];
+let streamI=0;
+
+/* CLOCK */
+setInterval(()=>{
+  document.getElementById('clock').textContent=new Date().toTimeString().slice(0,8);
+},1000);
+
+/* TAB SWITCH */
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  setTimeout(drawCharts,80);
+}
+
+/* ═══ FLOW TAB NODE INFO ═══ */
+const nData={
+  reservoir:{title:'🪣 NUTRIENT RESERVOIR — System Foundation',items:[
+    {l:'What it is',v:'Food-grade HDPE tank (20–1000L) holding the complete nutrient solution. Must be opaque to prevent algae. Round tanks circulate better than rectangular.'},
+    {l:'Key function',v:'Stores, buffers and supplies perfectly balanced nutrient-rich water to all plant root zones continuously or in timed cycles.'},
+    {l:'Beginner tip',v:'Start with a 25L opaque HDPE bucket for DWC. Label fill lines clearly. Always keep lid on to prevent evaporation and contamination.'},
+    {l:'Water changes',v:'Replace 100% of solution every 7–14 days to prevent salt accumulation and nutrient ratio drift. Rinse reservoir thoroughly.'},
+    {l:'Temperature control',v:'Keep solution at 18–22°C. Water above 24°C holds less dissolved oxygen and promotes Pythium root rot. Add aquarium chiller if needed.'},
+    {l:'IoT integration',v:'HC-SR04 ultrasonic sensor monitors level continuously. Drops below 30% trigger auto-alert. Float switch cuts pumps if empty.'},
+  ]},
+  sensors:{title:'📡 IOT SENSOR NETWORK — Farm Intelligence',items:[
+    {l:'pH Sensor',v:'Measures solution acidity. Optimal: 5.5–6.5. Above 6.8 locks out iron/manganese. Below 5.0 causes nutrient burn and root damage. Atlas Scientific EZO-pH for best accuracy.'},
+    {l:'EC Sensor',v:'Electrical Conductivity = total dissolved nutrient concentration (1.2–2.5 mS/cm). Temperature-compensated. Too low = hungry, slow plants. Too high = osmotic stress.'},
+    {l:'Temperature',v:'Water (18–24°C) and air (20–26°C) measured independently. Warm water reduces O₂ solubility. Cold stunts enzyme activity. DS18B20 waterproof probe.'},
+    {l:'DO Sensor',v:'Dissolved Oxygen must exceed 6 mg/L. Below 4 mg/L causes anaerobic root zone = Pythium root rot. Optical DO sensors more accurate and longer-lasting than galvanic.'},
+    {l:'Light (PPFD/PAR)',v:'Measures Photosynthetically Active Radiation (400–700nm) in µmol/m²/s. Target 200–600 for leafy greens, 600–1000 for fruiting crops. DLI (daily light integral) also important.'},
+    {l:'Data protocol',v:'Sensors connect via I²C multiplexer or individual UART channels → ESP32 → WiFi → MQTT broker → cloud. Sample rate: 5–30 seconds depending on parameter stability.'},
+  ]},
+  controller:{title:'🧠 MICROCONTROLLER — Automation Brain',items:[
+    {l:'Arduino Mega',v:'Beginner entry point. 54 digital I/O, 16 analog pins. ~£15. Program with C++ in Arduino IDE. Perfect for learning control logic before moving to ESP32.'},
+    {l:'ESP32',v:'Best mid-range choice. Dual-core 240MHz, built-in WiFi+BT, ~£5. Run Arduino framework or MicroPython. 18 ADC channels. Ideal for full IoT hydroponics.'},
+    {l:'Raspberry Pi 4B',v:'Full Linux computer. 4-core ARM, 4GB RAM. Run Python, Node-RED, local MQTT broker, TensorFlow Lite for ML predictions, USB camera vision — all in one device.'},
+    {l:'Control algorithm',v:'PID controller for pH/EC dosing prevents overshoot. Kp/Ki/Kd tuned experimentally. Timer interrupts for precise photoperiod control. Watchdog resets on firmware hang.'},
+    {l:'Software stack',v:'Arduino IDE → learning · MicroPython + MQTT → IoT intermediate · Python + Node-RED + Docker → production platform · InfluxDB + Grafana → analytics.'},
+    {l:'Failsafe design',v:'Always: float switch prevents pump running dry, hardware timer backup for lights, secondary alarm if pH goes below 4.5 or above 8.0. Never rely on software alone.'},
+  ]},
+  grow:{title:'🌿 GROW BED — Root Zone Engineering',items:[
+    {l:'DWC System',v:'Plants in net pots suspended above 20L buckets. Roots hang directly in oxygenated nutrient solution. Air stone + pump runs 24/7. Simplest, cheapest, fastest growing system.'},
+    {l:'NFT System',v:'PVC channels sloped at 1:30–1:40 gradient. Pump delivers thin film (2–3mm) of solution. 15min ON / 45min OFF cycle. Roots get both oxygen and nutrients simultaneously.'},
+    {l:'Net Pots',v:'3cm pots for small herbs, 5cm for lettuce, 10cm for tomatoes/peppers. Fill with rockwool or LECA. Roots extend through mesh into solution. Crucial: pot must touch nutrient film.'},
+    {l:'Root health monitoring',v:'Visual: healthy roots = bright white, slightly fuzzy. Problem signs: brown/slimy = Pythium (root rot) from low DO. Treat with H₂O₂ 3ml/L or ZeroTol. Yellow = pH issue.'},
+    {l:'Plant spacing',v:'Lettuce: 20cm centers. Basil: 15cm. Tomatoes: 45–60cm (need cages). Strawberry: 25cm. Maximise canopy area without mutual shading — calculate LAI for precision.'},
+    {l:'Lighting physics',v:'LED bar 30–60cm above canopy. Adjust weekly as plants grow. PPFD falls with inverse square law — distance matters greatly. White mylar panels on walls improve edge plant light by 20–30%.'},
+  ]},
+  cloud:{title:'☁️ CLOUD & APP LAYER — Remote Intelligence',items:[
+    {l:'MQTT Protocol',v:'Message Queuing Telemetry Transport. Pub/Sub lightweight protocol. ESP32 publishes to broker every 30s. Cloud subscribes. Port 1883 (plain) or 8883 (TLS encrypted).'},
+    {l:'Thingsboard OSS',v:'Open-source IoT platform. Deploy locally on Pi or cloud. Drag-drop dashboard builder, rule engine for custom alerts, REST API, widget library. Best free option.'},
+    {l:'Grafana + InfluxDB',v:'InfluxDB stores time-series sensor data. Grafana queries and renders beautiful dashboards. Detect seasonal trends, correlate parameters. Docker compose for easy setup.'},
+    {l:'Blynk IoT',v:'Fastest to prototype. Drag-drop phone dashboard in 10 minutes. Virtual pins map to sensor values. Free tier limited — use for PoC before migrating to Thingsboard.'},
+    {l:'Alert pipeline',v:'Threshold breach → MQTT → Node-RED rule → Twilio SMS + Telegram Bot API + SendGrid email. Alert fatigue management: debounce 5 minutes, severity levels, escalation policy.'},
+    {l:'Analytics & ML',v:'90-day history enables pattern detection. pH drift prediction from linear regression. Yield forecasting with growth stage correlation. TensorFlow Lite runs on Pi for on-device inference.'},
+  ]},
+};
+
+function showNodeInfo(key,el){
+  const panel=document.getElementById('node-info');
+  const d=nData[key];
+  document.getElementById('node-title').textContent=d.title;
+  document.getElementById('node-items').innerHTML=d.items.map(i=>
+    `<div class="info-item"><div class="info-item-lbl">${i.l}</div><div class="info-item-val">${i.v}</div></div>`
+  ).join('');
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  document.querySelectorAll('.flow-node').forEach(n=>n.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+/* ═══ SIMULATION ═══ */
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function jit(v,s,a,b){return clamp(v+(Math.random()-.5)*s*2,a,b);}
+
+function simTick(){
+  S.ph  =jit(S.ph, .06,5.2,7.0);
+  S.ec  =jit(S.ec, .10,0.9,2.9);
+  S.wt  =jit(S.wt, .4, 16, 29);
+  S.do_ =jit(S.do_,.18,4.5,11.5);
+  S.at  =jit(S.at, .3, 17, 31);
+  S.rh  =jit(S.rh, 1.5,48, 84);
+  S.lx  =jit(S.lx, 18, 70, 720);
+  S.fr  =jit(S.fr, .12,1.4,5.4);
+  S.pts++;
+  phH.push(S.ph);if(phH.length>60)phH.shift();
+  ecH.push(S.ec);if(ecH.length>60)ecH.shift();
+  wtH.push(S.wt);if(wtH.length>60)wtH.shift();
+  doH.push(S.do_);if(doH.length>60)doH.shift();
+  rhH.push(S.rh);if(rhH.length>60)rhH.shift();
+  lxH.push(S.lx/8);if(lxH.length>60)lxH.shift();
+  updateDash();updateTwin();mqttTick();checkAlerts();drawCharts();
+}
+setInterval(simTick,2500);
+
+/* ═══ DASHBOARD UPDATE ═══ */
+function setKpi(id,bar,trend,v,mn,mx,unit,lo,hi){
+  const el=document.getElementById(id);
+  const be=document.getElementById(bar);
+  const te=document.getElementById(trend);
+  if(!el)return;
+  const disp=v>10?Math.round(v).toString():v.toFixed(1);
+  el.textContent=disp+(unit||'');
+  const pct=((v-mn)/(mx-mn)*100);
+  if(be)be.style.width=clamp(pct,3,97)+'%';
+  const ok=v>=lo&&v<=hi;
+  const cls=ok?'val-ok':(v<lo*.85||v>hi*1.15?'val-bad':'val-warn');
+  el.className='kpi-value '+cls;
+  if(te){te.textContent=ok?'▲ Optimal':(v<lo?'▼ Low':'▲ High');te.className='kpi-status '+cls;}
+}
+function updateDash(){
+  setKpi('d-ph','db-ph','dt-ph',S.ph,0,14,'',5.5,6.5);
+  setKpi('d-ec','db-ec','dt-ec',S.ec,0,4,'',1.2,2.5);
+  setKpi('d-wt','db-wt','dt-wt',S.wt,15,30,'°C',18,24);
+  setKpi('d-do','db-do','dt-do',S.do_,0,14,'',6,10);
+  setKpi('d-at','db-at','dt-at',S.at,10,35,'°C',20,26);
+  setKpi('d-rh','db-rh','dt-rh',S.rh,0,100,'%',60,70);
+  setKpi('d-lx','db-lx','dt-lx',S.lx,0,720,'',200,600);
+  setKpi('d-fr','db-fr','dt-fr',S.fr,0,6,'',2,5);
+  // toggles
+  ['pump','air','light','fan','phd','nuta','nutb','chill'].forEach(k=>{
+    const cb=document.getElementById('act-'+k);
+    const st=document.getElementById('stat-'+k);
+    if(cb&&st){st.textContent=cb.checked?'ON':'OFF';st.className='act-row-stat '+(cb.checked?'val-ok':'val-warn');}
+  });
+  // uptime
+  const up=Math.floor((Date.now()-S.t0)/1000);
+  const h=String(Math.floor(up/3600)).padStart(2,'0'),m=String(Math.floor(up%3600/60)).padStart(2,'0'),s=String(up%60).padStart(2,'0');
+  const uel=document.getElementById('uptime');if(uel)uel.textContent=`${h}:${m}:${s}`;
+  const dp=document.getElementById('dpts');if(dp)dp.textContent=S.pts;
+  const at=document.getElementById('alert-today');if(at)at.textContent=S.alertsN;
+  const ap=document.getElementById('avg-ph');if(ap)ap.textContent=S.ph.toFixed(1);
+  const ae=document.getElementById('avg-ec');if(ae)ae.textContent=S.ec.toFixed(1);
+  const aw=document.getElementById('avg-wt');if(aw)aw.textContent=Math.round(S.wt)+'°C';
+  const ad=document.getElementById('avg-do');if(ad)ad.textContent=S.do_.toFixed(1);
+}
+
+/* ═══ ALERTS ═══ */
+function checkAlerts(){
+  const fresh=[];
+  if(S.ph<5.3||S.ph>6.8)fresh.push({lvl:'crit',ico:'🚨',txt:`pH ${S.ph.toFixed(2)} — CRITICAL. Emergency dosing triggered.`});
+  else if(S.ph<5.6||S.ph>6.5)fresh.push({lvl:'warn',ico:'⚠️',txt:`pH ${S.ph.toFixed(2)} — approaching limit, monitor closely.`});
+  if(S.ec<1.0||S.ec>2.9)fresh.push({lvl:'warn',ico:'⚠️',txt:`EC ${S.ec.toFixed(2)} mS/cm — nutrient level out of range.`});
+  if(S.wt>27)fresh.push({lvl:'warn',ico:'🌡️',txt:`Water temp ${S.wt.toFixed(1)}°C — activate chiller immediately.`});
+  if(S.do_<5.5)fresh.push({lvl:'crit',ico:'🚨',txt:`DO ${S.do_.toFixed(1)} mg/L — CRITICAL LOW OXYGEN. Root rot risk!`});
+  fresh.push({lvl:'ok',ico:'✅',txt:`System heartbeat OK — ${new Date().toLocaleTimeString()}`});
+  fresh.forEach(a=>{allAlerts.unshift({...a,time:new Date().toLocaleTimeString()});if(a.lvl!=='ok')S.alertsN++;});
+  if(allAlerts.length>25)allAlerts.length=25;
+  const list=document.getElementById('alert-list');
+  if(list)list.innerHTML=allAlerts.slice(0,9).map(a=>
+    `<div class="alert-item ${a.lvl}"><span>${a.ico}</span><div class="alert-body"><div class="alert-txt">${a.txt}</div><div class="alert-time">${a.time}</div></div></div>`
+  ).join('');
+  const cnt=document.getElementById('alert-count');
+  if(cnt)cnt.textContent=allAlerts.filter(a=>a.lvl!=='ok').length+' active';
+}
+
+/* ═══ CHARTS ═══ */
+// Convert a 6-digit hex color to rgba(r,g,b,alpha) string — canvas-safe
+function hexToRgba(hex, alpha) {
+  // Strip any leading # and take only first 6 chars (ignore any alpha suffix)
+  const h = hex.replace('#','').slice(0,6);
+  const r = parseInt(h.slice(0,2),16);
+  const g = parseInt(h.slice(2,4),16);
+  const b = parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function drawLine(ctx,data,color,mn,mx,W,H){
+  if(data.length<2)return;
+  // Ensure color is always a plain 6-digit hex for hexToRgba
+  const baseColor = '#' + color.replace('#','').slice(0,6);
+  const r=mx-mn||1,xs=W/(data.length-1);
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, hexToRgba(baseColor, 0.28));
+  grad.addColorStop(1, hexToRgba(baseColor, 0));
+  ctx.beginPath();ctx.moveTo(0,H-((data[0]-mn)/r)*H);
+  data.forEach((v,i)=>ctx.lineTo(i*xs,H-((v-mn)/r)*H));
+  ctx.lineTo((data.length-1)*xs,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  ctx.beginPath();ctx.strokeStyle=baseColor;ctx.lineWidth=2;ctx.lineJoin='round';
+  data.forEach((v,i)=>{const x=i*xs,y=H-((v-mn)/r)*H;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+  ctx.stroke();
+  const lv=data[data.length-1],lx2=(data.length-1)*xs,ly=H-((lv-mn)/r)*H;
+  ctx.beginPath();ctx.arc(lx2,ly,4,0,Math.PI*2);
+  ctx.fillStyle=baseColor;ctx.shadowColor=baseColor;ctx.shadowBlur=8;ctx.fill();ctx.shadowBlur=0;
+}
+
+function initCanvas(id){
+  const c=document.getElementById(id);if(!c)return null;
+  const W=c.offsetWidth||600,H=c.offsetHeight||130;
+  c.width=W;c.height=H;
+  const ctx=c.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#0e3d4a';ctx.lineWidth=.6;
+  for(let i=0;i<5;i++){const y=H/4*i;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  return{ctx,W,H};
+}
+
+function drawCharts(){
+  let r;
+  r=initCanvas('phChart');  if(r)drawLine(r.ctx,phH,'#00e5ff',4,9,r.W,r.H);
+  r=initCanvas('ecChart');  if(r)drawLine(r.ctx,ecH,'#76ff03',0,4,r.W,r.H);
+  r=initCanvas('tempChart');if(r){drawLine(r.ctx,wtH,'#ffb300',14,32,r.W,r.H);drawLine(r.ctx,doH,'#ea80fc',3,13,r.W,r.H);}
+  // Fixed: was '#ffb30099' (8-digit hex — invalid in canvas). Now uses plain hex, alpha controlled via drawLine
+  r=initCanvas('envChart'); if(r){drawLine(r.ctx,rhH,'#ce93d8',40,90,r.W,r.H);drawLine(r.ctx,lxH,'#ffb300',5,95,r.W,r.H);}
+}
+
+/* ═══ DIGITAL TWIN UPDATE ═══ */
+function isOk(k,v){
+  const r={ph:[5.5,6.5],ec:[1.2,2.5],wt:[17,26],do_:[5.5,11],rh:[55,75],lx:[150,650]};
+  const rng=r[k];return rng?v>=rng[0]&&v<=rng[1]:true;
+}
+function updateTwin(){
+  const map={ph:S.ph,ec:S.ec,wt:S.wt,do:S.do_,rh:S.rh,lx:S.lx};
+  Object.entries(map).forEach(([k,v])=>{
+    const el=document.getElementById('tw-'+k);if(!el)return;
+    el.textContent=v>10?Math.round(v).toString():v.toFixed(1);
+    el.className='tw-kpi-v '+(isOk(k==='do'?'do_':k,v)?'val-ok':'val-warn');
+  });
+  // floating labels
+  const fp=document.getElementById('fv-ph');if(fp)fp.textContent=`pH ${S.ph.toFixed(2)}`;
+  const fe=document.getElementById('fv-ec');if(fe)fe.textContent=`EC ${S.ec.toFixed(2)}`;
+  const fw=document.getElementById('fv-wt');if(fw)fw.textContent=`T° ${S.wt.toFixed(1)}°C`;
+  // controller
+  const cs=document.getElementById('ctrl-st');
+  if(cs){const ok=S.ph>4.5&&S.ph<8&&S.do_>4.5;cs.textContent=ok?'STATUS: NOMINAL':'STATUS: ALERT';cs.style.fill=ok?'#76ff03':'#ff1744';}
+  const cl=document.getElementById('ctrl-loop');if(cl)cl.textContent=`Loop: ${Math.floor(700+Math.random()*500)}ms`;
+  // dosing
+  const dph=document.getElementById('dose-ph');
+  if(dph){const d=S.ph>6.5||S.ph<5.5;dph.textContent=d?'DOSING':'IDLE';dph.setAttribute('fill',d?'#ffb300':'#0e3d4a');}
+  const dnu=document.getElementById('dose-nut');
+  if(dnu){const d=S.ec<1.2;dnu.textContent=d?'DOSING':'IDLE';dnu.setAttribute('fill',d?'#76ff03':'#0e3d4a');}
+  // pump dots
+  const pdph=document.getElementById('dot-phd');if(pdph)pdph.style.background=S.ph>6.5||S.ph<5.5?'var(--a1)':'var(--rim2)';
+  const pna=document.getElementById('dot-na');if(pna)pna.style.background=S.ec<1.2?'var(--g1)':'var(--rim2)';
+  const pvphd=document.getElementById('pv-phd');if(pvphd)pvphd.textContent=S.ph>6.5||S.ph<5.5?'DOSING':'IDLE';
+  const pvna=document.getElementById('pv-na');if(pvna)pvna.textContent=S.ec<1.2?'DOSING':'IDLE';
+  // health
+  let score=100;
+  if(S.ph<5.5||S.ph>6.5)score-=22;if(S.ec<1.2||S.ec>2.5)score-=16;
+  if(S.wt>26||S.wt<17)score-=16;if(S.do_<6)score-=28;if(S.rh<55||S.rh>75)score-=12;
+  score=Math.max(0,score);
+  const hs=document.getElementById('health-score');if(hs){hs.textContent=score;hs.className='health-num '+(score>75?'val-ok':score>50?'val-warn':'val-bad');}
+  const hb=document.getElementById('health-badge');if(hb)hb.textContent=`HEALTH: ${score}% ${score>80?'✓':score>60?'⚠':'✕'}`;
+  drawHealthRing(score);
+}
+
+function drawHealthRing(score){
+  const c=document.getElementById('hRing');if(!c)return;
+  const ctx=c.getContext('2d'),cx=65,cy=65,r=52,lw=11;
+  ctx.clearRect(0,0,130,130);
+  // bg ring
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='#0e3d4a';ctx.lineWidth=lw;ctx.stroke();
+  // coloured arc
+  const col=score>80?'#76ff03':score>60?'#ffb300':'#ff1744';
+  const end=(score/100)*Math.PI*2-Math.PI/2;
+  ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,end);
+  ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';
+  ctx.shadowColor=col;ctx.shadowBlur=12;ctx.stroke();ctx.shadowBlur=0;
+  // ticks
+  for(let i=0;i<20;i++){
+    const a=i/20*Math.PI*2-Math.PI/2;
+    const r1=r-lw/2-2,r2=r+lw/2+2;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1);
+    ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
+    ctx.strokeStyle='#020c0e';ctx.lineWidth=1;ctx.stroke();
+  }
+}
+
+/* ═══ MQTT STREAM ═══ */
+const topics=['farm/ph','farm/ec','farm/temp/water','farm/temp/air','farm/do','farm/rh','farm/ppfd','farm/flow','farm/pump/status','farm/sys/loop'];
+function mqttTick(){
+  const tp=topics[streamI%topics.length];streamI++;
+  const vals={'farm/ph':S.ph.toFixed(3),'farm/ec':S.ec.toFixed(3),'farm/temp/water':S.wt.toFixed(2),'farm/temp/air':S.at.toFixed(2),'farm/do':S.do_.toFixed(2),'farm/rh':Math.round(S.rh),'farm/ppfd':Math.round(S.lx),'farm/flow':S.fr.toFixed(2),'farm/pump/status':'RUNNING','farm/sys/loop':Math.floor(700+Math.random()*500)+'ms'};
+  const box=document.getElementById('stream-list');if(!box)return;
+  const t=new Date().toTimeString().slice(3,8);
+  const el=document.createElement('div');el.className='stream-entry';
+  el.innerHTML=`<span class="stream-t">${t}</span><span class="stream-topic">${tp}</span><span class="stream-v">${vals[tp]}</span>`;
+  box.insertBefore(el,box.firstChild);
+  if(box.children.length>18)box.removeChild(box.lastChild);
+}
+
+/* ═══ SETPOINT CONTROLS ═══ */
+function updateSP(k,v){
+  S.sp[k]=parseFloat(v);
+  const labels={ph:parseFloat(v).toFixed(1),ec:parseFloat(v).toFixed(1)+' mS',lx:v+'%',wt:v+'°C'};
+  const el=document.getElementById('sp-'+k+'-v');if(el)el.textContent=labels[k];
+}
+
+/* ═══ GROWTH MODES ═══ */
+const growModes={
+  seedling:{ph:5.9,ec:0.6,lx:40,label:'SEEDLING'},
+  veg:     {ph:5.9,ec:1.6,lx:70,label:'VEGETATIVE'},
+  flower:  {ph:6.1,ec:2.1,lx:80,label:'FLOWERING'},
+  fruiting:{ph:6.2,ec:2.3,lx:85,label:'FRUITING'},
+  kratky:  {ph:6.0,ec:1.5,lx:55,label:'KRATKY'},
+  stress:  {ph:4.4,ec:3.4,lx:100,label:'⚠ STRESS TEST'},
+};
+function setGrowMode(k,btn){
+  S.mode=k;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const m=growModes[k];
+  S.sp.ph=m.ph;S.sp.ec=m.ec;S.sp.lx=m.lx;
+  ['ph','ec','lx'].forEach(p=>{
+    const sl=document.getElementById('sp-'+p);if(sl)sl.value=S.sp[p];
+    updateSP(p,S.sp[p]);
+  });
+  const ml=document.getElementById('twin-mode-lbl');if(ml)ml.textContent='MODE: '+m.label;
+  if(k==='stress'){S.ph=4.5;S.ec=3.3;}else{S.ph=m.ph;S.ec=m.ec;}
+}
+
+/* ═══ TWIN TOOLTIP ═══ */
+function showTwinTip(e,title,body){
+  const tip=document.getElementById('twin-tip');if(!tip)return;
+  const wrap=tip.closest('.twin-svg-wrap');const rect=wrap.getBoundingClientRect();
+  tip.innerHTML=`<strong>${title}</strong>${body}`;
+  tip.style.left=(e.clientX-rect.left+16)+'px';
+  tip.style.top=(e.clientY-rect.top-10)+'px';
+  tip.classList.add('show');
+  clearTimeout(tip._t);tip._t=setTimeout(()=>tip.classList.remove('show'),3500);
+}
+
+/* INIT */
+window.addEventListener('resize',drawCharts);
+simTick();
+setTimeout(drawCharts,120);
+drawHealthRing(94);
+</script>
+</body>
+</html>
