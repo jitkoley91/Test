@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>IACS Learning Lab – Industrial Automation Control Systems 3D</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, 'SF Mono', monospace;
+      background: #030609;
+    }
+    canvas {
+      outline: none;
+      cursor: grab;
+    }
+    canvas:active {
+      cursor: grabbing;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #07121e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1a3a5a;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #2c5a7a;
+    }
+    button, input {
+      transition: all 0.2s ease;
+    }
+  </style>
+  <!-- Three.js core library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- React & ReactDOM (development) -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <!-- Babel for JSX in browser -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root" style="width:100%;height:100vh;"></div>
+
+  <script type="text/babel" data-presets="react,env" data-type="module">
+    // --------------------------------------------------------------
+    // IACS LEARNING LAB – Full 3D Interactive Experience
+    // --------------------------------------------------------------
+    const { useState, useEffect, useRef } = React;
+    const THREE = window.THREE;
+
+    // --------------------------------------------------------------
+    // Custom Orbit Controls (drag, pan, zoom)
+    // --------------------------------------------------------------
+    class Orbit {
+      constructor(cam, el) {
+        this.cam = cam;
+        this.el = el;
+        this.th = 0.8;
+        this.ph = 1.05;
+        this.r = 12;
+        this.cx = 0;
+        this.cy = 1.5;
+        this.cz = 0;
+        this._d = false;
+        this._rb = false;
+        this._px = 0;
+        this._py = 0;
+
+        const md = (e) => {
+          this._d = true;
+          this._rb = (e.button === 2);
+          this._px = e.clientX;
+          this._py = e.clientY;
+          e.preventDefault();
+        };
+        const mm = (e) => {
+          if (!this._d) return;
+          const dx = e.clientX - this._px;
+          const dy = e.clientY - this._py;
+          this._px = e.clientX;
+          this._py = e.clientY;
+          if (this._rb) {
+            const fwd = new THREE.Vector3();
+            this.cam.getWorldDirection(fwd);
+            const rt = fwd.clone().cross(new THREE.Vector3(0, 1, 0)).normalize();
+            this.cx -= rt.x * dx * 0.013;
+            this.cy += dy * 0.013;
+            this.cz -= rt.z * dx * 0.013;
+          } else {
+            this.th -= dx * 0.007;
+            this.ph = Math.max(0.07, Math.min(Math.PI - 0.07, this.ph + dy * 0.007));
+          }
+          this._s();
+        };
+        const mu = () => { this._d = false; };
+        const mw = (e) => {
+          this.r = Math.max(3, Math.min(38, this.r + e.deltaY * 0.013));
+          this._s();
+        };
+        el.addEventListener('mousedown', md);
+        el.addEventListener('contextmenu', (e) => e.preventDefault());
+        el.addEventListener('wheel', mw, { passive: true });
+        window.addEventListener('mousemove', mm);
+        window.addEventListener('mouseup', mu);
+        
+        this._cln = () => {
+          el.removeEventListener('mousedown', md);
+          el.removeEventListener('wheel', mw);
+          window.removeEventListener('mousemove', mm);
+          window.removeEventListener('mouseup', mu);
+        };
+        this._s();
+      }
+      _s() {
+        const sp = Math.sin(this.ph);
+        const cp = Math.cos(this.ph);
+        const st = Math.sin(this.th);
+        const ct = Math.cos(this.th);
+        this.cam.position.set(
+          this.cx + this.r * sp * st,
+          this.cy + this.r * cp,
+          this.cz + this.r * sp * ct
+        );
+        this.cam.lookAt(this.cx, this.cy, this.cz);
+      }
+      set(r, cx, cy, cz, th = 0.8, ph = 1.05) {
+        this.r = r; this.cx = cx; this.cy = cy; this.cz = cz;
+        this.th = th; this.ph = ph;
+        this._s();
+      }
+      destroy() { this._cln(); }
+    }
+
+    // --------------------------------------------------------------
+    // Geometry Helpers
+    // --------------------------------------------------------------
+    function clr(scene) {
+      const rem = [];
+      scene.traverse(o => { if (o !== scene) rem.push(o); });
+      rem.forEach(o => {
+        scene.remove(o);
+        if (o.geometry) o.geometry.dispose();
+        const mats = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
+        mats.forEach(m => m.dispose());
+      });
+    }
+    function addGrid(s) { s.add(new THREE.GridHelper(30, 40, 0x0c1e30, 0x081420)); }
+    function addLights(s) {
+      s.add(new THREE.AmbientLight(0x1a3050, 0.9));
+      const d = new THREE.DirectionalLight(0xfff5e0, 1.2);
+      d.position.set(10, 14, 10);
+      d.castShadow = true;
+      d.shadow.mapSize.set(1024, 1024);
+      s.add(d);
+      const b = new THREE.DirectionalLight(0x2244aa, 0.35);
+      b.position.set(-8, 5, -8);
+      s.add(b);
+    }
+    function box(w, h, d, color, metal = 0.3, rough = 0.5) {
+      return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color, metalness: metal, roughness: rough }));
+    }
+    function cyl(rt, rb, h, seg, color, metal = 0.4, rough = 0.4) {
+      return new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), new THREE.MeshStandardMaterial({ color, metalness: metal, roughness: rough }));
+    }
+    function sph(r, color, metal = 0.2, rough = 0.5) {
+      return new THREE.Mesh(new THREE.SphereGeometry(r, 16, 16), new THREE.MeshStandardMaterial({ color, metalness: metal, roughness: rough }));
+    }
+    function wire(pts, color = 0x38bdf8) {
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      return new THREE.Line(geo, new THREE.LineBasicMaterial({ color }));
+    }
+
+    // --------------------------------------------------------------
+    // SCENE DEFINITIONS
+    // --------------------------------------------------------------
+    const LAYER_COLORS = [0x1a7a1a, 0x1555aa, 0xc49500, 0xcc5500, 0xaa1111];
+    function setupPipeline(eng) {
+      clr(eng.scene); addGrid(eng.scene); addLights(eng.scene);
+      eng.scene.background = new THREE.Color(0x05090f);
+      eng.scene.fog = new THREE.FogExp2(0x05090f, 0.025);
+      const blocks = [];
+      const xs = [-7, -3.5, 0, 3.5, 7];
+      xs.forEach((x, i) => {
+        const b = box(2.2, 2.8, 1.6, LAYER_COLORS[i], 0.5, 0.35);
+        b.castShadow = true;
+        b.position.set(x, 1.4, 0);
+        eng.scene.add(b);
+        blocks.push(b);
+        const edge = new THREE.EdgesGeometry(b.geometry);
+        const ln = new THREE.LineSegments(edge, new THREE.LineBasicMaterial({ color: new THREE.Color(LAYER_COLORS[i]).addScalar(0.25) }));
+        b.add(ln);
+        const ball = sph(0.3, LAYER_COLORS[i], 0.3, 0.4);
+        ball.position.set(0, 1.7, 0);
+        b.add(ball);
+        if (i < 4) {
+          const arrow = box(0.8, 0.15, 0.3, 0xffffff, 0, 0.8);
+          arrow.position.set(x + 1.9, 1.4, 0);
+          eng.scene.add(arrow);
+        }
+      });
+      const N = 180;
+      const pos = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        pos[i*3] = (Math.random() - 0.5) * 18;
+        pos[i*3+1] = 0.5 + Math.random() * 2.5;
+        pos[i*3+2] = (Math.random() - 0.5) * 0.6;
+      }
+      const pGeo = new THREE.BufferGeometry();
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const ptsObj = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0x7dd3fc, size: 0.1, sizeAttenuation: true, transparent: true, opacity: 0.85 }));
+      eng.scene.add(ptsObj);
+      eng.refs.pts = ptsObj;
+      eng.refs.pPos = pos;
+      eng.refs.blocks = blocks;
+      eng.refs.pGeo = pGeo;
+      const floor = box(30, 0.1, 10, 0x060e18, 0.1, 0.9);
+      floor.position.y = -0.05;
+      eng.scene.add(floor);
+      eng.orbit.set(16, 0, 1.5, 0, 0.8, 1.0);
+    }
+    function animPipeline(eng, t, dt) {
+      if (!eng.refs.pts) return;
+      const pos = eng.refs.pPos;
+      const N = pos.length / 3;
+      for (let i = 0; i < N; i++) {
+        pos[i*3] += 1.8 * dt;
+        if (pos[i*3] > 9.5) {
+          pos[i*3] = -9.5 + Math.random() * 0.5;
+          pos[i*3+1] = 0.5 + Math.random() * 2.5;
+          pos[i*3+2] = (Math.random() - 0.5) * 0.6;
+        }
+      }
+      eng.refs.pGeo.attributes.position.needsUpdate = true;
+      if (eng.refs.blocks) {
+        eng.refs.blocks.forEach((b, i) => {
+          b.rotation.y = Math.sin(t * 0.5 + i * 0.8) * 0.06;
+          b.position.y = 1.4 + Math.sin(t * 0.7 + i * 1.1) * 0.08;
+        });
+      }
+    }
+
+    function setupSensors(eng) {
+      clr(eng.scene); addGrid(eng.scene); addLights(eng.scene);
+      eng.scene.background = new THREE.Color(0x04080d);
+      eng.scene.fog = new THREE.FogExp2(0x04080d, 0.03);
+      const belt = box(12, 0.25, 2.2, 0x1a2a3a, 0.4, 0.7);
+      belt.position.set(0, 0.12, 0);
+      belt.receiveShadow = true;
+      eng.scene.add(belt);
+      for (let x = -5.5; x <= 5.5; x += 1.5) {
+        const r = cyl(0.25, 0.25, 2.4, 12, 0x334455, 0.6, 0.3);
+        r.rotation.x = Math.PI / 2;
+        r.position.set(x, 0.28, 0);
+        eng.scene.add(r);
+      }
+      const fr = box(12.4, 0.08, 0.15, 0x243348, 0.6, 0.4);
+      fr.position.set(0, 0.36, 1.2);
+      eng.scene.add(fr);
+      const fr2 = fr.clone();
+      fr2.position.z = -1.2;
+      eng.scene.add(fr2);
+      const prod = box(1, 1, 1.1, 0xc89020, 0.2, 0.7);
+      prod.position.set(-5.5, 0.75, 0);
+      prod.castShadow = true;
+      eng.scene.add(prod);
+      eng.refs.prod = prod;
+      const mount = box(0.15, 1.8, 0.15, 0x334455, 0.7, 0.3);
+      mount.position.set(1.5, 1.1, 1.6);
+      eng.scene.add(mount);
+      const sens = cyl(0.22, 0.22, 0.85, 20, 0x3a5a7a, 0.7, 0.25);
+      sens.rotation.z = Math.PI / 2;
+      sens.position.set(1.5, 0.9, 1.3);
+      eng.scene.add(sens);
+      const sensLens = cyl(0.12, 0.12, 0.1, 16, 0x33aadd, 0.3, 0.1);
+      sensLens.rotation.z = Math.PI / 2;
+      sensLens.position.set(1.5, 0.9, 0.85);
+      eng.scene.add(sensLens);
+      const beamGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, -1)]);
+      const beam = new THREE.Line(beamGeo, new THREE.LineBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0 }));
+      beam.position.set(1.5, 0.9, 0.8);
+      eng.scene.add(beam);
+      eng.refs.beam = beam;
+      const led = sph(0.22, 0x113311, 0.1, 0.5);
+      led.position.set(1.5, 2.3, 1.6);
+      eng.scene.add(led);
+      eng.refs.led = led;
+      const probe = cyl(0.07, 0.07, 1.8, 10, 0x6688aa, 0.7, 0.3);
+      probe.position.set(-3, 0.55, 1.6);
+      eng.scene.add(probe);
+      const probeHead = sph(0.15, 0xdd6600, 0.4, 0.4);
+      probeHead.position.set(-3, 0.3, 1.6);
+      eng.scene.add(probeHead);
+      const plcBox = box(1.4, 2, 0.9, 0x1a2a50, 0.5, 0.4);
+      plcBox.position.set(5.5, 1.0, 0);
+      eng.scene.add(plcBox);
+      for (let y = -0.6; y <= 0.6; y += 0.3) {
+        const led2 = sph(0.07, y > 0 ? 0x00ff44 : 0x003311, 0, 0.5);
+        led2.position.set(-0.5, y, 0.46);
+        plcBox.add(led2);
+      }
+      const wirePts = [new THREE.Vector3(1.5, 0.9, 1.3), new THREE.Vector3(1.5, 2.5, 1.3), new THREE.Vector3(5.5, 2.5, 0.4), new THREE.Vector3(5.5, 1.8, 0.4)];
+      eng.scene.add(wire(wirePts, 0x00aaff));
+      eng.orbit.set(14, 0, 1.5, 0, 0.75, 0.95);
+    }
+    function animSensors(eng, t, dt) {
+      if (!eng.refs.prod) return;
+      eng.refs.prod.position.x += 1.6 * dt;
+      if (eng.refs.prod.position.x > 6.5) eng.refs.prod.position.x = -5.5;
+      const dist = Math.abs(eng.refs.prod.position.x - 1.5);
+      const detecting = dist < 0.9;
+      if (eng.refs.beam) {
+        const bm = eng.refs.beam.material;
+        bm.opacity = detecting ? 0.85 : 0;
+        if (detecting) bm.color.set(dist < 0.5 ? 0xff0000 : 0xff6600);
+      }
+      if (eng.refs.led) {
+        eng.refs.led.material.color.set(detecting ? 0x00ff44 : 0x113311);
+        eng.refs.led.material.emissive = detecting ? new THREE.Color(0x006622) : new THREE.Color(0x000000);
+        eng.refs.led.material.emissiveIntensity = detecting ? 0.8 : 0;
+      }
+    }
+
+    function setupPLC(eng) {
+      clr(eng.scene); addGrid(eng.scene); addLights(eng.scene);
+      eng.scene.background = new THREE.Color(0x04070e);
+      eng.scene.fog = new THREE.FogExp2(0x04070e, 0.025);
+      const plc = box(2.4, 3.6, 1.5, 0x1a2a50, 0.55, 0.35);
+      plc.castShadow = true;
+      plc.position.set(0, 1.8, 0);
+      eng.scene.add(plc);
+      const orbs = [];
+      const R = 3.2;
+      const SCAN_COLORS = [0x22aa44, 0xd4a017, 0xcc5500, 0x3388cc];
+      for (let i = 0; i < 4; i++) {
+        const angle = (i / 4) * Math.PI * 2;
+        const orb = sph(0.4, SCAN_COLORS[i], 0.2, 0.5);
+        orb.position.set(Math.cos(angle) * R, 1.8 + Math.sin(angle) * 0.5, Math.sin(angle) * R * 0.5);
+        orb.castShadow = true;
+        eng.scene.add(orb);
+        orbs.push(orb);
+      }
+      const ringGeo = new THREE.TorusGeometry(R, 0.03, 8, 64);
+      const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: 0x1a3a5a, transparent: true, opacity: 0.5 }));
+      ring.rotation.x = Math.PI / 3;
+      ring.position.y = 1.8;
+      eng.scene.add(ring);
+      eng.refs.orbs = orbs;
+      eng.orbit.set(14, 0, 1.8, 0, 0.8, 1.05);
+    }
+    function animPLC(eng, t, dt) {
+      if (!eng.refs.orbs) return;
+      const R = 3.2;
+      const speed = 0.7;
+      const SCAN_COLORS = [0x22aa44, 0xd4a017, 0xcc5500, 0x3388cc];
+      eng.refs.orbs.forEach((o, i) => {
+        const angle = (i / 4) * Math.PI * 2 + t * speed;
+        o.position.set(Math.cos(angle) * R, 1.8 + Math.sin(angle) * 0.5, Math.sin(angle) * R * 0.5);
+        const phase = (t * speed / (Math.PI * 2)) % 1;
+        const myPhase = (i / 4);
+        const dist = Math.min(Math.abs(phase - myPhase), 1 - Math.abs(phase - myPhase));
+        const active = dist < 0.2;
+        o.material.emissive = active ? new THREE.Color(SCAN_COLORS[i]) : new THREE.Color(0x000000);
+        o.material.emissiveIntensity = active ? 0.7 : 0;
+        o.scale.setScalar(active ? 1.25 : 1.0);
+      });
+    }
+
+    function setupMotor(eng, ctrl) {
+      clr(eng.scene); addGrid(eng.scene); addLights(eng.scene);
+      eng.scene.background = new THREE.Color(0x050a0e);
+      eng.scene.fog = new THREE.FogExp2(0x050a0e, 0.03);
+      const mode = ctrl?.motorMode || 'vfd';
+      const motBody = cyl(0.85, 0.85, 3.5, 24, 0x334466, 0.6, 0.35);
+      motBody.rotation.z = Math.PI / 2;
+      motBody.position.set(2, 1.2, 0);
+      motBody.castShadow = true;
+      eng.scene.add(motBody);
+      const shaft = cyl(0.12, 0.12, 2.2, 12, 0x8899aa, 0.8, 0.2);
+      shaft.rotation.z = Math.PI / 2;
+      shaft.position.set(5.2, 1.2, 0);
+      eng.scene.add(shaft);
+      const disc = cyl(0.8, 0.8, 0.12, 16, 0x445577, 0.4, 0.5);
+      disc.rotation.z = Math.PI / 2;
+      disc.position.set(4.5, 1.2, 0);
+      eng.scene.add(disc);
+      eng.refs.shaft = shaft;
+      eng.refs.disc = disc;
+      eng.refs.motorMode = mode;
+      eng.orbit.set(14, 0, 1.2, 0, 0.75, 0.95);
+    }
+    function animMotor(eng, t, dt, ctrl) {
+      const mode = ctrl?.motorMode || 'vfd';
+      let speed = 2.5;
+      if (mode === 'contactor') speed = ctrl?.motorOn ? 4 : 0;
+      else if (mode === 'servo') speed = Math.sin(t * 0.5) * 6;
+      else speed = (ctrl?.motorHz || 50) * 0.15;
+      if (eng.refs.disc) eng.refs.disc.rotation.x += speed * dt;
+      if (eng.refs.shaft) eng.refs.shaft.rotation.x += speed * dt;
+    }
+
+    function setupNetworks(eng) {
+      clr(eng.scene); addGrid(eng.scene); addLights(eng.scene);
+      eng.scene.background = new THREE.Color(0x03060c);
+      eng.scene.fog = new THREE.FogExp2(0x03060c, 0.025);
+      const devices = [
+        { pos: [-7, 1.4, 0], color: 0x1a6b1a }, { pos: [7, 1.4, 0], color: 0xaa3300 },
+        { pos: [0, 1.4, -6], color: 0x553388 }, { pos: [0, 1.4, 6], color: 0x226688 },
+        { pos: [-5, 1.4, -4], color: 0x886622 }, { pos: [5, 1.4, -4], color: 0x336655 }
+      ];
+      const devMeshes = [];
+      devices.forEach(d => {
+        const dev = box(1.4, 2.0, 0.9, d.color, 0.5, 0.4);
+        dev.position.set(d.pos[0], d.pos[1], d.pos[2]);
+        dev.castShadow = true;
+        eng.scene.add(dev);
+        devMeshes.push(dev);
+        const lnPts = [new THREE.Vector3(0, 1.4, 0), new THREE.Vector3(d.pos[0], d.pos[1], d.pos[2])];
+        eng.scene.add(wire(lnPts, 0x1a4060));
+      });
+      const pkts = [];
+      devices.forEach(d => {
+        for (let i = 0; i < 5; i++) {
+          const pkt = sph(0.09, 0x38bdf8, 0.1, 0.5);
+          pkt.material.emissive = new THREE.Color(0x007788);
+          pkt.material.emissiveIntensity = 0.9;
+          pkt.userData = { t: Math.random(), dir: Math.random() > 0.5 ? 1 : -1, target: new THREE.Vector3(d.pos[0], d.pos[1], d.pos[2]) };
+          eng.scene.add(pkt);
+          pkts.push(pkt);
+        }
+      });
+      eng.refs.pkts = pkts;
+      eng.refs.devMeshes = devMeshes;
+      eng.orbit.set(17, 0, 1.5, 0, 0.8, 0.92);
+    }
+    function animNetworks(eng, t, dt) {
+      if (!eng.refs.pkts) return;
+      const origin = new THREE.Vector3(0, 1.4, 0);
+      eng.refs.pkts.forEach(p => {
+        p.userData.t += dt * 0.6 * p.userData.dir;
+        if (p.userData.t > 1) p.userData.t = 0;
+        if (p.userData.t < 0) p.userData.t = 1;
+        p.position.lerpVectors(origin, p.userData.target, p.userData.t);
+        p.material.emissiveIntensity = 0.6 + Math.sin(t * 4) * 0.3;
+      });
+      if (eng.refs.devMeshes) eng.refs.devMeshes.forEach((d, i) => d.rotation.y = Math.sin(t * 0.3 + i * 1.2) * 0.04);
+    }
+
+    function setupShrink(eng) {
+      clr(eng.scene); addGrid(eng.scene); addLights(eng.scene);
+      eng.scene.background = new THREE.Color(0x04080e);
+      eng.scene.fog = new THREE.FogExp2(0x04080e, 0.022);
+      const belt = box(16, 0.25, 2.4, 0x1a2535, 0.4, 0.7);
+      belt.position.set(0, 0.12, 0);
+      belt.receiveShadow = true;
+      eng.scene.add(belt);
+      const prod = box(0.9, 0.9, 1.0, 0xc89020, 0.2, 0.7);
+      prod.position.set(-7, 0.72, 0);
+      prod.castShadow = true;
+      eng.scene.add(prod);
+      eng.refs.prod = prod;
+      const tunnel = box(3.5, 2.2, 2.8, 0x2a1a0a, 0.3, 0.7);
+      tunnel.position.set(1, 1.1, 0);
+      eng.scene.add(tunnel);
+      const heatLight = new THREE.PointLight(0xff4400, 0, 8);
+      heatLight.position.set(1, 1.5, 0);
+      eng.scene.add(heatLight);
+      eng.refs.heatLight = heatLight;
+      eng.refs.heatIntensity = 0;
+      eng.orbit.set(18, 0, 1.5, 0, 0.78, 1.0);
+    }
+    function animShrink(eng, t, dt) {
+      if (!eng.refs.prod) return;
+      eng.refs.prod.position.x += 1.2 * dt;
+      if (eng.refs.prod.position.x > 9) eng.refs.prod.position.x = -7.5;
+      const px = eng.refs.prod.position.x;
+      const inTunnel = px > -0.75 && px < 2.75;
+      let heatI = eng.refs.heatIntensity;
+      heatI += (inTunnel ? 0.04 : -0.025) * 60 * dt;
+      heatI = Math.max(0, Math.min(1, heatI));
+      eng.refs.heatIntensity = heatI;
+      if (eng.refs.heatLight) eng.refs.heatLight.intensity = heatI * 3.5;
+    }
+
+    // --------------------------------------------------------------
+    // CHAPTERS CONFIGURATION
+    // --------------------------------------------------------------
+    const CHAPTERS = [
+      { id: 'pipeline', accent: '#d4a017', num: 'OVERVIEW', title: 'IACS Architecture', sub: 'Industrial Automation Control Systems — The 5 Layers', setup: setupPipeline, anim: animPipeline, initCtrl: {} },
+      { id: 'sensors', accent: '#22aa44', num: 'LAYER 1', title: 'Input Devices', sub: 'Sensors — The Eyes & Ears of the Machine', setup: setupSensors, anim: animSensors, initCtrl: {} },
+      { id: 'plc', accent: '#c49500', num: 'LAYER 3', title: 'PLC — The Brain', sub: 'Logic Module & Scan Cycle', setup: setupPLC, anim: animPLC, initCtrl: {} },
+      { id: 'motor', accent: '#cc5500', num: 'MOTOR CTRL', title: 'Motor Control', sub: 'Contactor · VFD · Servo Drive', setup: setupMotor, anim: animMotor, initCtrl: { motorMode: 'vfd', motorHz: 50, motorOn: true } },
+      { id: 'networks', accent: '#3388cc', num: 'NETWORKS', title: 'Industrial Networks', sub: 'Modbus TCP/IP · EtherNet/IP · PROFINET', setup: setupNetworks, anim: animNetworks, initCtrl: {} },
+      { id: 'shrink', accent: '#dd4400', num: 'REAL WORLD', title: 'Shrink Tunnel System', sub: 'Complete IACS Example', setup: setupShrink, anim: animShrink, initCtrl: {} }
+    ];
+
+    // --------------------------------------------------------------
+    // MAIN APP COMPONENT
+    // --------------------------------------------------------------
+    const IACSLearning = () => {
+      const canvasRef = useRef(null);
+      const wrapRef = useRef(null);
+      const engRef = useRef({ scene: null, camera: null, renderer: null, orbit: null, clock: null, refs: {} });
+      const ctrlRef = useRef({});
+      const [chapterIdx, setChapterIdx] = useState(0);
+      const [ctrl, setCtrl] = useState(CHAPTERS[0].initCtrl);
+      const [fps, setFps] = useState(0);
+      const fpsR = useRef({ n: 0, t: 0 });
+      
+      // Initialize Three.js engine
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const wrap = wrapRef.current;
+        const w = wrap.clientWidth, h = wrap.clientHeight;
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(w, h);
+        renderer.shadowMap.enabled = true;
+        const camera = new THREE.PerspectiveCamera(60, w/h, 0.1, 500);
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x05090f);
+        const clock = new THREE.Clock();
+        const orbit = new Orbit(camera, canvas);
+        const eng = engRef.current;
+        eng.scene = scene; eng.camera = camera; eng.renderer = renderer; eng.orbit = orbit; eng.clock = clock;
+        const onResize = () => {
+          const W = wrap.clientWidth, H = wrap.clientHeight;
+          camera.aspect = W/H; camera.updateProjectionMatrix();
+          renderer.setSize(W, H);
+        };
+        window.addEventListener('resize', onResize);
+        return () => {
+          if (eng._raf) cancelAnimationFrame(eng._raf);
+          orbit.destroy();
+          renderer.dispose();
+          window.removeEventListener('resize', onResize);
+        };
+      }, []);
+      
+      // Switch scene when chapter changes
+      useEffect(() => {
+        const eng = engRef.current;
+        if (!eng.scene) return;
+        if (eng.refs._cleanup) eng.refs._cleanup();
+        eng.refs = {};
+        const ch = CHAPTERS[chapterIdx];
+        ctrlRef.current = { ...ch.initCtrl };
+        setCtrl({ ...ch.initCtrl });
+        ch.setup(eng, ctrlRef.current);
+      }, [chapterIdx]);
+      
+      // Special handling for motor mode rebuild
+      const prevMode = useRef('vfd');
+      useEffect(() => {
+        if (chapterIdx !== 3) return;
+        if (ctrl.motorMode !== prevMode.current) {
+          prevMode.current = ctrl.motorMode;
+          const eng = engRef.current;
+          if (eng.scene) {
+            eng.refs = {};
+            CHAPTERS[3].setup(eng, ctrl);
+          }
+        }
+      }, [ctrl.motorMode, chapterIdx]);
+      
+      // Animation loop
+      useEffect(() => {
+        const eng = engRef.current;
+        if (!eng.renderer) return;
+        let id;
+        const animate = () => {
+          id = requestAnimationFrame(animate);
+          const dt = Math.min(0.033, eng.clock ? eng.clock.getDelta() : 0.016);
+          const t = eng.clock ? eng.clock.getElapsedTime() : 0;
+          CHAPTERS[chapterIdx].anim(eng, t, dt, ctrlRef.current);
+          eng.renderer.render(eng.scene, eng.camera);
+          fpsR.current.n++;
+          fpsR.current.t += dt;
+          if (fpsR.current.t >= 0.6) {
+            setFps(Math.round(fpsR.current.n / fpsR.current.t));
+            fpsR.current = { n: 0, t: 0 };
+          }
+        };
+        animate();
+        return () => cancelAnimationFrame(id);
+      }, [chapterIdx]);
+      
+      const setCtrlWrapped = (next) => { ctrlRef.current = next; setCtrl(next); };
+      const ch = CHAPTERS[chapterIdx];
+      
+      // Left panel content (compact but rich)
+      const renderLeftContent = () => {
+        const accent = ch.accent;
+        let detail = '';
+        if (ch.id === 'pipeline') detail = '✓ Sensors detect → PLC thinks → Outputs act\n5-layer model: Input devices → Input module → PLC logic → Output module → Output devices';
+        if (ch.id === 'sensors') detail = 'Digital: 24V DC (ON/OFF) | Analog: 0-10V / 4-20mA\nPhotoelectric, proximity, temperature, pressure';
+        if (ch.id === 'plc') detail = 'Scan cycle: Read Inputs → Execute Logic → Update Outputs (repeat)\nCycle time: 1–100ms';
+        if (ch.id === 'motor') detail = `${ctrl.motorMode?.toUpperCase()} control active\n${ctrl.motorMode === 'vfd' ? 'Variable frequency → smooth speed' : ctrl.motorMode === 'servo' ? 'Position + encoder feedback' : 'Simple on/off contactor'}`;
+        if (ch.id === 'networks') detail = 'Modbus TCP, EtherNet/IP, PROFINET\nPLC communicates with remote I/O, HMI, drives';
+        if (ch.id === 'shrink') detail = 'Photo eye → PLC → Heater + conveyor motor\nReal IACS: sensors, logic, outputs, HMI & alarms';
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ borderLeft: `3px solid ${accent}`, paddingLeft: 10 }}>
+              <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: accent, letterSpacing: 2 }}>{ch.num.toUpperCase()}</div>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#e8f0fc', marginTop: 4 }}>{ch.title}</div>
+              <div style={{ fontSize: 12, color: '#5a7a9a' }}>{ch.sub}</div>
+            </div>
+            <div style={{ background: '#0a121e', border: `1px solid ${accent}33`, borderRadius: 8, padding: 12, whiteSpace: 'pre-line', fontSize: 12, color: '#aaccee' }}>{detail}</div>
+            {ch.id === 'motor' && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                {['contactor','vfd','servo'].map(m => (
+                  <button key={m} onClick={() => setCtrlWrapped({ ...ctrl, motorMode: m })} style={{ flex:1, background: ctrl.motorMode === m ? `${ch.accent}22` : 'transparent', border: `1px solid ${ch.accent}`, borderRadius: 6, padding: 6, fontSize: 10, color: '#ccddee', cursor: 'pointer' }}>{m.toUpperCase()}</button>
+                ))}
+              </div>
+            )}
+            {ch.id === 'motor' && ctrl.motorMode === 'vfd' && (
+              <div style={{ background: '#0a121e', borderRadius: 6, padding: 8, marginTop: 4 }}>
+                <span style={{ fontSize: 11, color: '#8aa5c5' }}>Frequency: {ctrl.motorHz || 50} Hz</span>
+                <input type="range" min={0} max={60} value={ctrl.motorHz || 50} onChange={e => setCtrlWrapped({ ...ctrl, motorHz: Number(e.target.value) })} style={{ width: '100%', marginTop: 6, accentColor: ch.accent }} />
+              </div>
+            )}
+            {ch.id === 'motor' && ctrl.motorMode === 'contactor' && (
+              <button onClick={() => setCtrlWrapped({ ...ctrl, motorOn: !ctrl.motorOn })} style={{ background: `${accent}22`, border: `1px solid ${accent}`, borderRadius: 6, padding: 6, fontSize: 12, cursor: 'pointer', marginTop: 4 }}>{ctrl.motorOn ? 'STOP MOTOR' : 'START MOTOR'}</button>
+            )}
+          </div>
+        );
+      };
+      
+      return (
+        <div style={{ display: 'flex', height: '100vh', background: '#030609', color: '#c0d4ec', overflow: 'hidden' }}>
+          <div style={{ width: 380, minWidth: 320, borderRight: '1px solid #0d1a2a', background: '#04080f', display: 'flex', flexDirection: 'column', overflow: 'auto', padding: '16px 14px' }}>
+            {renderLeftContent()}
+            <div style={{ marginTop: 'auto', paddingTop: 20, display: 'flex', justifyContent: 'space-between' }}>
+              <button onClick={() => setChapterIdx(Math.max(0, chapterIdx-1))} style={{ background: 'transparent', border: '1px solid #1a3050', borderRadius: 4, padding: '6px 14px', color: '#6a8aaa', cursor: 'pointer' }}>◀ PREV</button>
+              <span style={{ fontSize: 11, color: '#4a6a8a' }}>{chapterIdx+1}/{CHAPTERS.length}</span>
+              <button onClick={() => setChapterIdx(Math.min(CHAPTERS.length-1, chapterIdx+1))} style={{ background: `${ch.accent}18`, border: `1px solid ${ch.accent}`, borderRadius: 4, padding: '6px 14px', color: ch.accent, cursor: 'pointer' }}>NEXT ▶</button>
+            </div>
+          </div>
+          <div ref={wrapRef} style={{ flex: 1, position: 'relative', background: '#030508' }}>
+            <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', cursor: 'grab' }} />
+            <div style={{ position: 'absolute', bottom: 8, right: 12, fontFamily: 'monospace', fontSize: 9, color: '#4ade80', background: '#030609aa', padding: '2px 6px', borderRadius: 4 }}>{fps} FPS</div>
+            <div style={{ position: 'absolute', bottom: 8, left: 12, fontFamily: 'monospace', fontSize: 9, color: '#1e3450' }}>🖱️ Drag to orbit · Scroll zoom · Right drag pan</div>
+          </div>
+        </div>
+      );
+    };
+    
+    ReactDOM.createRoot(document.getElementById('root')).render(<IACSLearning />);
+  </script>
+</body>
+</html>
